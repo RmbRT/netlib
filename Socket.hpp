@@ -1,5 +1,5 @@
 #ifndef __netlib_socket_hpp_defined
-#define __netlib_socket_hpp_defined
+//#define __netlib_socket_hpp_defined
 
 #include "Defines.hpp"
 #include "Protocol.hpp"
@@ -10,7 +10,7 @@ namespace netlib
 
 	class Socket;
 
-	enum class SocketType: int
+	enum class SocketType: char
 	{
 		Stream = 1,
 		Datagram = 2,
@@ -24,19 +24,10 @@ namespace netlib
 		Receive, Send, Both
 	};
 
-	/* The native socket api. */
-	namespace socketapi
-	{
-		typedef std::uint16_t socket_t;
-		Socket socket(AddressFamily family, SocketType type, Protocol protocol = Protocol::Default);
-		Socket accept(Socket const& sock);
-		bool pending(socket_t self);
-		
-	}
-
 	/* Basic Socket class. Represents a generic Socket and contains functions that all types of Sockets have. */
 	class Socket
 	{
+	protected:
 		SocketAddress m_address;
 		Protocol m_protocol;
 		SocketType m_type;
@@ -44,7 +35,7 @@ namespace netlib
 	public:
 		Socket();
 		Socket(AddressFamily family, SocketType type, Protocol protocol = Protocol::Default);
-		Socket(const SocketAddress &address, SocketType type, Protocol protocol = Protocol::Default);
+		Socket(SocketAddress const& address, SocketType type, Protocol protocol = Protocol::Default);
 		~Socket();
 
 		/* Socket does not support copying. */
@@ -58,6 +49,8 @@ namespace netlib
 
 		/*recv, recvfrom or accept will not block if this returns true.*/
 		bool pending();
+		void close();
+		int shutdown(Shutdown);
 
 		/* Whether this Socket exists. */
 		NETLIB_INL bool exists() const;
@@ -67,10 +60,6 @@ namespace netlib
 		NETLIB_INL Protocol protocol() const;
 		/* Returns the type of this Socket. */
 		NETLIB_INL SocketType type() const;
-
-		void close();
-		int shutdown(Shutdown);
-
 	};
 
 	
@@ -80,34 +69,28 @@ namespace netlib
 		/*Accepts IPv4 and IPv6.*/
 		StreamSocket(AddressFamily);
 		StreamSocket(){}
-		StreamSocket(StreamSocket const&socket) = delete;
-		StreamSocket(StreamSocket &&move);
+		StreamSocket(StreamSocket const& socket) = delete;
+		StreamSocket(StreamSocket &&move) : Socket((Socket&&)move) { }
+
 
 		StreamSocket &operator=(StreamSocket const&) = delete;
-		NETLIB_INL StreamSocket &operator=(StreamSocket &&move);
+		using Socket::operator=;
 
+		size_t send(void const* data, size_t size);
+		size_t recv(void * data, size_t size);
 
-		using SocketBase::send;
-		using SocketBase::connect;
-		using SocketBase::bind;
-		using SocketBase::listen;
-		using SocketBase::accept;
-		using SocketBase::recv;
+		bool connect(SocketAddress const& addr);
+		bool bind(SocketAddress const& address);
+		bool listen(int backlog = 5);
+		bool accept(Socket &out);
 	};
 
-	class DatagramSocket : public SocketBase
+	class DatagramSocket : public Socket
 	{
 	public:
 		DatagramSocket(AddressFamily);
-		using SocketBase::sendto;
-		using SocketBase::close;
-		using SocketBase::isOpen;
-		using SocketBase::getAddress;
-		using SocketBase::getProtocol;
-		using SocketBase::getType;
-		using SocketBase::recvfrom;
-		using SocketBase::pending;
-		using SocketBase::operator bool;
+		size_t sendto(void const * data, size_t size, SocketAddress const& to, size_t flags);
+		size_t recvfrom(void * data, size_t size, SocketAddress const& from, size_t flags);
 	};
 }
 

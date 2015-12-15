@@ -143,7 +143,7 @@ namespace netlib
 			}
 			NETLIB_INL Serializer &operator<<(double v)
 			{
-				_data.reserve(_data.size()+8);
+				_data.resize(_data.size()+8);
 				*reinterpret_cast<double*>(&_data.back()-7) = dbl(v, net_order_dbl);
 				return *this;
 			}

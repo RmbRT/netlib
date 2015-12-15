@@ -7,7 +7,7 @@
 namespace netlib
 {
 	/* Address family of a socket. */
-	enum class AddressFamily : std::int32_t
+	enum class AddressFamily : char
 	{
 		Unix = 1,
 		Local = Unix,

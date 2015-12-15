@@ -20,12 +20,6 @@ namespace netlib
 	bool init();
 	bool isInited();
 	void cleanup();
-
-	
-
-
-	
-
 }
 
 #endif

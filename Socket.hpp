@@ -1,5 +1,5 @@
 #ifndef __netlib_socket_hpp_defined
-//#define __netlib_socket_hpp_defined
+#define __netlib_socket_hpp_defined
 
 #include "Defines.hpp"
 #include "Protocol.hpp"
@@ -74,15 +74,15 @@ namespace netlib
 
 
 		StreamSocket &operator=(StreamSocket const&) = delete;
-		using Socket::operator=;
+		StreamSocket &operator=(StreamSocket &&);
 
 		size_t send(void const* data, size_t size);
 		size_t recv(void * data, size_t size);
 
 		bool connect(SocketAddress const& addr);
 		bool bind(SocketAddress const& address);
-		bool listen(int backlog = 5);
-		bool accept(Socket &out);
+		bool listen();
+		bool accept(StreamSocket &out);
 	};
 
 	class DatagramSocket : public Socket

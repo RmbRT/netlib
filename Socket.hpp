@@ -74,7 +74,7 @@ namespace netlib
 
 
 		StreamSocket &operator=(StreamSocket const&) = delete;
-		StreamSocket &operator=(StreamSocket &&);
+		StreamSocket &operator=(StreamSocket &&move);
 
 		size_t send(void const* data, size_t size);
 		size_t recv(void * data, size_t size);
@@ -89,9 +89,17 @@ namespace netlib
 	{
 	public:
 		DatagramSocket(AddressFamily);
+		DatagramSocket &operator=(DatagramSocket &&);
+		DatagramSocket(DatagramSocket &&);
+
+		DatagramSocket &operator=(DatagramSocket const&) = delete;
+		DatagramSocket(DatagramSocket const&) = delete;
+
 		size_t sendto(void const * data, size_t size, SocketAddress const& to, size_t flags);
 		size_t recvfrom(void * data, size_t size, SocketAddress const& from, size_t flags);
 	};
 }
+
+#include "Socket.inl"
 
 #endif

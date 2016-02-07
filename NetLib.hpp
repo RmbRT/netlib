@@ -1,6 +1,4 @@
-/* Netlib - netlib.hpp
-	this file contains the socket classes that wrap around the platform specific socket libraries.*/
-
+/* Netlib - netlib.hpp */
 #ifndef __netlib_hpp_defined
 #define __netlib_hpp_defined
 

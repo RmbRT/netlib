@@ -1,8 +1,7 @@
 #include "Socket.hpp"
 #include "Platform.hpp"
-#include "NetLib.hpp"
-#include "HostInfo.hpp"
 #include <cassert>
+#include <type_traits>
 
 namespace netlib
 {
@@ -27,6 +26,8 @@ namespace netlib
 		m_socket = ::socket((int)m_address.family, (int)type, (int)protocol);
 	}
 	Socket::Socket() : m_address(IPv4SocketAddress("")), m_type(), m_protocol(), m_socket(-1) {}
+
+	Socket::~Socket() { close(); }
 
 	void Socket::close()
 	{
@@ -113,8 +114,9 @@ namespace netlib
 
 		if(m_socket)
 			socket.close();
-
-		socket.m_address = reinterpret_cast<SocketAddress&>(addr);
+		socket.m_address.address.ipv4.address = reinterpret_cast<IPv4Address const&>(addr.sin_addr.S_un.S_addr);
+		socket.m_address.address.ipv4.port = ntohs(addr.sin_port);
+		socket.m_address.family = (AddressFamily)addr.sin_family;
 		socket.m_protocol = m_protocol;
 		socket.m_type = m_type;
 		socket.m_socket = sockid;
@@ -131,7 +133,7 @@ namespace netlib
 		timeval val = { 0, 0 };
 		
 		::select(m_socket+1,&set,0,0,&val);
-		return FD_ISSET(m_socket, &set);
+		return 0 != FD_ISSET(m_socket, &set);
 	}
 
 	bool StreamSocket::listen()
@@ -162,70 +164,16 @@ namespace netlib
 
 		return *this;
 	}
-
-	SocketAddress::SocketAddress(const char* str)
+	StreamSocket &StreamSocket::operator=(StreamSocket &&move)
 	{
-		parse(str, *this);
+		 (Socket&)*this = std::move(move);
+		 return *this;
 	}
-	bool SocketAddress::parse(const char * str, SocketAddress &out)
+	DatagramSocket &DatagramSocket::operator=(DatagramSocket &&move)
 	{
-		
-		IPv4SocketAddress ipv4sa;
-		IPv6SocketAddress ipv6sa;
-		if(IPv4SocketAddress::parse(str, ipv4sa))
-		{
-			out = ipv4sa;
-			return true;
-		}
-#ifndef NETLIB_IPV6_WIP
-		else if(IPv6SocketAddress::parse(str, ipv6sa))
-		{
-			out = ipv6sa;
-			return true;
-		}
-#endif
-		else
-		{
-			std::string _str(str);
-			unsigned l = _str.length();
-		
-			unsigned last_colon;
-			for(last_colon = l; last_colon--;)
-				if(str[last_colon] == ':')
-					break;
-
-			if(!last_colon || last_colon == l-1)
-				return false;
-
-		
-
-			HostInfo hi(_str.substr(0, last_colon));
-
-			if(hi.valid())
-			{
-				switch(hi.address_type())
-				{
-				case AddressFamily::IPv4:
-					{
-						out = IPv4SocketAddress(hi.addresses().front().address.ipv4.address, atoi(&str[last_colon+1]));
-						return true;
-					} break;
-#ifndef NETLIB_IPV6_WIP
-				case AddressFamily::IPv6:
-					{
-						out = IPv6SocketAddress(hi.ipv6_addresses().front(), atoi(&str[last_colon+1]));
-						return true;
-					} break;
-#endif
-				default:
-					{
-						assert(!"invalid address family.");
-						return false;
-					} break;
-				}
-			}
-			else
-				return false;
-		}
+		 (Socket&)*this = std::move(move);
+		 return *this;
 	}
+	DatagramSocket::DatagramSocket(DatagramSocket&& move):
+		Socket(std::move(move)) { }
 }

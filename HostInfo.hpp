@@ -20,7 +20,7 @@ namespace netlib
 		std::vector<SocketAddress> m_addresses;
 		bool m_valid;
 	public:
-		HostInfo();
+		HostInfo() = default;
 		HostInfo(HostInfo && move);
 		HostInfo & operator=(HostInfo && move);
 		
@@ -34,5 +34,7 @@ namespace netlib
 		NETLIB_INL bool valid() const;
 	};
 }
+
+#include "HostInfo.inl"
 
 #endif

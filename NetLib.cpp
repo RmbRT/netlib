@@ -8,7 +8,7 @@
 namespace netlib
 {
 	bool initialized = false;
-	void cleanupSocketAPI()
+	void cleanup()
 	{
 #ifdef NETLIB_WINDOWS
 		if(initialized)
@@ -19,7 +19,7 @@ namespace netlib
 #endif
 	}
 
-	bool startupSocketAPI()
+	bool init()
 	{
 #ifdef NETLIB_WINDOWS
 		if(!initialized)
@@ -34,7 +34,7 @@ namespace netlib
 #endif
 	}
 
-	bool isSocketAPIInitialized()
+	bool isInited()
 	{
 		return initialized;
 	}

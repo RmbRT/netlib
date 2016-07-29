@@ -20,11 +20,11 @@ This generates project / make files (depending on your machine configuration). U
 
 ## Documentation
 
-Makes sure to have doxygen installed, and navigate to the ```netlib/doxygen``` directory, and execute:
+Makes sure to have doxygen installed, and navigate to the ```netlib``` directory, and execute:
 
 ```doxygen Doxyfile```
 
-This will generate a documentation in ```netlib/doxygen/html```. This file has been set as main page of the documentation. More documentation can be found in ```netlib/doxygen/docs/```.
+This will generate a documentation in ```netlib/html```. This file has been set as main page of the documentation. More documentation can be found in ```netlib/docs/```.
 * [Beginner's information](docs/Guide.md)
 
 ## License

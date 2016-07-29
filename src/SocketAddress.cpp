@@ -1,14 +1,13 @@
 #include "SocketAddress.hpp"
 #include <cstdio>
-#include "NetLib.hpp"
 #include "HostInfo.hpp"
+#include "netlib.hpp"
 
 namespace netlib
 {
-	IPv4Address const IPv4Address::Any = IPv4Address(0,0,0,0);
+	IPv4Address const IPv4Address::kAny = IPv4Address(0,0,0,0);
 
-	IPv4Address::IPv4Address(ubyte_t d0, ubyte_t d1, ubyte_t d2, ubyte_t d3):
-		d0(d0), d1(d1), d2(d2), d3(d3) { }
+	
 	IPv4Address::IPv4Address(char const * data)
 	{
 		parse(data, *this);
@@ -27,9 +26,6 @@ namespace netlib
 			return false;
 	}
 
-	IPv6Address::IPv6Address(std::uint16_t d0, std::uint16_t d1, std::uint16_t d2, std::uint16_t d3, std::uint16_t d4, std::uint16_t d5, std::uint16_t d6, std::uint16_t d7):
-		d0(d0), d1(d1), d2(d2), d3(d3), d4(d4), d5(d5), d6(d6), d7(d7) { }
-
 	IPv6Address::IPv6Address(char const * data) { parse(data, *this); }
 
 	bool IPv6Address::parse(char const * data, IPv6Address &out)
@@ -46,9 +42,6 @@ namespace netlib
 			return false;
 	}
 
-	IPv4SocketAddress::IPv4SocketAddress(IPv4Address const& address, std::uint16_t port):
-		address(address), port(port) { }
-
 	IPv4SocketAddress::IPv4SocketAddress(char const * addr)
 	{
 		parse(addr, *this);
@@ -57,7 +50,7 @@ namespace netlib
 	bool IPv4SocketAddress::parse(char const * data, IPv4SocketAddress &out)
 	{
 		unsigned int d0, d1, d2, d3, port;
-		if((sscanf_s(data, "%u.%u.%u.%u:%u", &d0, &d1, &d2, &d3, &port)==5)
+		if((sscanf(data, "%u.%u.%u.%u:%u", &d0, &d1, &d2, &d3, &port)==5)
 			&&(((d0|d1|d2|d3) & ~0xff) == 0) && ((port & ~0xffff) == 0))
 		{
 			out.address.d0 = ubyte_t(d0);
@@ -73,12 +66,17 @@ namespace netlib
 	
 	SocketAddress::SocketAddress(AddressFamily family):
 		family(family) { }
-	SocketAddress::SocketAddress(IPv4SocketAddress const&ipv4):
-		family(AddressFamily::IPv4)
+	SocketAddress::SocketAddress(IPv4SocketAddress const& ipv4):
+		family(AddressFamily::kIPv4)
 	{
 		address.ipv4 = ipv4;
 	}
-	SocketAddress::SocketAddress(const char* str)
+	SocketAddress::SocketAddress(IPv6SocketAddress const& ipv6):
+		family(AddressFamily::kIPv6)
+	{
+		address.ipv6 = ipv6;
+	}
+	SocketAddress::SocketAddress(const char * str)
 	{
 		parse(str, *this);
 	}
@@ -112,28 +110,26 @@ namespace netlib
 
 		
 
-			HostInfo hi(_str.substr(0, last_colon));
+			std::vector<AddressInfo> info = resolve_name(_str.substr(0, last_colon).c_str());
 
-			if(hi.valid())
+			if(!info.empty())
 			{
-				switch(hi.address_type())
+
+				port_t port = atoi(&str[last_colon+1]);
+				out = info.front().address;
+				switch(out.family)
 				{
-				case AddressFamily::IPv4:
+				case AddressFamily::kIPv4:
 					{
-						out = IPv4SocketAddress(hi.addresses().front().address.ipv4.address, atoi(&str[last_colon+1]));
-						return true;
+						out.address.ipv4.port = port;
 					} break;
-#ifndef NETLIB_IPV6_WIP
-				case AddressFamily::IPv6:
+				case AddressFamily::kIPv6:
 					{
-						out = IPv6SocketAddress(hi.addresses().front().address.ipv6.address, atoi(&str[last_colon+1]));
-						return true;
+						out.address.ipv6.port = port;
 					} break;
-#endif
 				default:
 					{
-						assert(!"invalid address family.");
-						return false;
+						assert(!"Address family not supported.");
 					} break;
 				}
 			}

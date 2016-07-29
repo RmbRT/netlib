@@ -1,3 +1,6 @@
+/** @file Socket.hpp
+	Contains the Socket classes and functions.
+	This is the 'heart' of the netlib. Main functionality resolving around sockets is all declared in here. */
 #ifndef __netlib_socket_hpp_defined
 #define __netlib_socket_hpp_defined
 

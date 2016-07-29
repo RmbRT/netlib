@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 project(netlib)
 
 # Set the C++ standard used by the netlib.
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wfatal-errors")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wfatal-errors -DNETLIB_BUILD")
 
 # Select all source files.
 file(GLOB_RECURSE netlib_sources ./src/*.cpp)

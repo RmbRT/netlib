@@ -2,7 +2,7 @@
 
 The netlib is an object oriented platform independend interface to the C socket API.
 
-** The current version of netlib is still a work in progress, and is not tested. Most functionality regarding IPv4 should work already though. **
+**The current version of netlib is still a work in progress, and is not tested. Most functionality regarding IPv4 should work already though.**
 
 ## Cloning
 
@@ -24,7 +24,8 @@ Makes sure to have doxygen installed, and navigate to the ```netlib/doxygen``` d
 
 ```doxygen Doxyfile```
 
-This will generate a documentation in ```netlib/doxygen/html```.
+This will generate a documentation in ```netlib/doxygen/html```. This file has been set as main page of the documentation. More documentation can be found in ```netlib/doxygen/docs/```.
+* [Beginner's information](docs/Guide.md)
 
 ## License
 

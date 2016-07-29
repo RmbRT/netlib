@@ -1,3 +1,5 @@
+/** @file HostInfo.hpp
+	Contains the resolve_name function that resolves a host name to a list of addresses. */
 #ifndef __netlib_hostinfo_hpp_defined
 #define __netlib_hostinfo_hpp_defined
 

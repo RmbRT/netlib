@@ -1,3 +1,5 @@
+/** @file SocketAddress.hpp
+	Contains address structures, unifies them into the SocketAddress type. */
 #ifndef __netlib_socketaddress_hpp_defined
 #define __netlib_socketaddress_hpp_defined
 

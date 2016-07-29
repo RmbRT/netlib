@@ -1,3 +1,5 @@
+/** @file Protocol.hpp
+	Contains the Protocol enumeration. */
 #ifndef __netlib_protocol_hpp_defined
 #define __netlib_protocol_hpp_defined
 
@@ -19,10 +21,12 @@ namespace netlib
 		NETLIB_LAST(kRaw)
 	};
 
-	/** constantnverts to the native socket api constant.
+#ifdef NETLIB_BUILD
+	/** Converts a protocol constant to the native socket api constant.
 	@param[in] protocol:
 		The enum constant to convert. */
 	int to_native_api(Protocol protocol);
+#endif
 }
 
 #endif

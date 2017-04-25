@@ -6,8 +6,9 @@ namespace netlib
 {
 	namespace x
 	{
-		bool Connection::receive(
-			std::vector<byte_t> & out)
+		bool Connection::receive_pending(
+			std::vector<byte_t> & out,
+			std::size_t max_count)
 		{
 			out.clear();
 			// for thread safety.
@@ -15,12 +16,33 @@ namespace netlib
 
 			while(pending())
 			{
-				size_t count = recv(buffer.data(), buffer.size());
+
+				std::size_t recv_count = (out.size() + buffer.size() > max_count)
+					? max_count - out.size()
+					: buffer.size();
+				std::size_t count = recv(buffer.data(), recv_count);
 				// error?
 				if(!count)
 					return false;
 
-				out.insert(out.end(), buffer.begin(), buffer.end());
+				out.insert(out.end(), buffer.begin(), buffer.begin() + count);
+			}
+
+			return true;
+		}
+
+		bool Connection::receive(
+			std::vector<byte_t> & out,
+			std::size_t count)
+		{
+			out.resize(count);
+			std::size_t received = 0;
+
+			while(received != count)
+			{
+				std::size_t recv_count = count - received;
+				if(!recv(out.data() + received, recv_count))
+					return false;
 			}
 
 			return true;

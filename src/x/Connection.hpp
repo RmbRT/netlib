@@ -40,14 +40,29 @@ namespace netlib
 			Connection & operator=(Connection const&) = delete;
 
 
-			/** Receives a chunk of data until none is pending.
+			/** Receives a chunk of data until none is pending, or until the given maximum count.
+				This call cannot block.
 			@param[out] out:
 				The buffer storing the received data.
+			@param[in] max_count:
+				The maximum byte count to receive.
 			@return
 				Whether the data was successfully received. */
-			bool receive(
-				std::vector<byte_t> & out);
+			bool receive_pending(
+				std::vector<byte_t> & out,
+				std::size_t max_count);
 
+			/** Receives exactly `count` bytes, or fails.
+				This call may block.
+			@param[out] out:
+				The buffer storing the received data.
+			@param[in] count:
+				The expected number of bytes.
+			@return
+				Whether the receiving succeeded. */
+			bool receive(
+				std::vector<byte_t> & out,
+				std::size_t count);
 
 			/** Sends data.
 				This function is for use with other container classes, or for static data.
@@ -60,7 +75,8 @@ namespace netlib
 			bool send(
 				void const * data,
 				std::size_t size);
-			/** Sends data.
+
+			/** Sends data from a vector.
 			@param[in] data:
 				The data to send.
 			@return

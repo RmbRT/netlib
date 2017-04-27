@@ -64,4 +64,6 @@ namespace netlib
 	}
 }
 
+#include "ConnectionListener.inl"
+
 #endif

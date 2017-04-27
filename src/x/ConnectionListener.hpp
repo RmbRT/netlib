@@ -1,3 +1,5 @@
+/** @file ConnectionListener.hpp
+	Contains the netlib::x::ConnectionListener class used for listening for incoming connections. */
 #ifndef __netlib_x_connectionlistener_hpp_defined
 #define __netlib_x_connectionlistener_hpp_defined
 
@@ -51,7 +53,7 @@ namespace netlib
 			using netlib::StreamSocket::pending;
 
 			/** Accepts an incoming connection.
-				Prerequesite is that the listener must be listening. This call blocks until a new connection is incoming, if pending() returns false. Otherwise, this function will be guaranteed not to block.
+				Prerequesite is that the listener must be listening. This call blocks until a new connection is incoming, if `pending()` returns false. Otherwise, this function will be guaranteed not to block.
 			@return
 				The incoming connection. If a problem occurred, the connection is closed. */
 			Connection accept();

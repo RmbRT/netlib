@@ -12,7 +12,7 @@ int const SOCKET_ERROR = -1;
 #endif
 
 namespace netlib
-{	
+{
 	::sockaddr_storage to_sockaddr_storage(
 		SocketAddress const& addr)
 	{
@@ -27,7 +27,7 @@ namespace netlib
 			{
 				::sockaddr_in & sin = reinterpret_cast<::sockaddr_in &>(ret);
 				IPv4SocketAddress const& ipv4 = addr.address.ipv4;
-				
+
 				// set fields.
 				sin.sin_port = TO_NET_PORT(ipv4.port);
 				// no need to cast, since the byte array is in the right order already.
@@ -41,7 +41,7 @@ namespace netlib
 				// set fields.
 				sin6.sin6_port = TO_NET_PORT(ipv6.port);
 				sin6.sin6_flowinfo = TO_NET_FLOWINFO(ipv6.field);
-				
+
 				std::uint16_t * const words = reinterpret_cast<std::uint16_t *>(
 					&sin6.sin6_addr.s6_addr[0]);
 
@@ -115,7 +115,7 @@ namespace netlib
 			to_native_api(type),
 			to_native_api(protocol));
 	}
-	
+
 	Socket::Socket():
 		m_address(IPv4SocketAddress("")),
 		m_type(),
@@ -270,12 +270,12 @@ namespace netlib
 	{
 		assert(Runtime::exists());
 		assert(exists());
-		
+
 		assert(m_protocol == Protocol::kTCP || (m_protocol == Protocol::kDefault && m_type == SocketType::kStream));
 
 		m_address = serverAddress;
 		::sockaddr_storage addr = to_sockaddr_storage(m_address);
-		
+
 		return SOCKET_ERROR != ::connect(
 			m_socket,
 			reinterpret_cast<::sockaddr const *>(&addr),
@@ -286,7 +286,7 @@ namespace netlib
 	{
 		assert(Runtime::exists());
 		assert(exists());
-		
+
 		m_address = address;
 		::sockaddr_storage addr = to_sockaddr_storage(m_address);
 		return SOCKET_ERROR != ::bind(
@@ -298,11 +298,11 @@ namespace netlib
 	{
 		assert(Runtime::exists());
 		assert(exists());
-		
+
 		sockaddr_in addr;
 		socklen_t len = sizeof(::sockaddr);
 		int sockid = ::accept(m_socket, reinterpret_cast<::sockaddr*>(&addr), &len);
-			
+
 		if(sockid == -1)
 			return false;
 
@@ -318,18 +318,18 @@ namespace netlib
 
 		return true;
 	}
-	
+
 	bool Socket::pending()
 	{
 		assert(Runtime::exists());
 		assert(exists());
-		
+
 		fd_set set;
 		FD_ZERO(&set);
 		FD_SET(m_socket, &set);
 
 		timeval val = { 0, 0 };
-		
+
 		::select(m_socket+1,&set,0,0,&val);
 		return 0 != FD_ISSET(m_socket, &set);
 	}
@@ -338,7 +338,7 @@ namespace netlib
 	{
 		assert(Runtime::exists());
 		assert(exists());
-		
+
 		return !::listen(m_socket, SOMAXCONN);
 	}
 	StreamSocket::StreamSocket(
@@ -355,7 +355,7 @@ namespace netlib
 		m_socket(move.m_socket)
 	{
 		assert(&move != this);
-		
+
 		move.m_socket = -1;
 	}
 

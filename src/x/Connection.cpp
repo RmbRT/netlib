@@ -14,7 +14,7 @@ namespace netlib
 			// for thread safety.
 			static thread_local std::vector<byte_t> buffer(4096);
 
-			while(pending())
+			while(pending() && out.size() < max_count)
 			{
 
 				std::size_t recv_count = (out.size() + buffer.size() > max_count)
@@ -41,8 +41,11 @@ namespace netlib
 			while(received != count)
 			{
 				std::size_t recv_count = count - received;
-				if(!recv(out.data() + received, recv_count))
+				if(!(recv_count = recv(out.data() + received, recv_count)))
+					// error?
 					return false;
+
+				received += recv_count;
 			}
 
 			return true;
@@ -57,7 +60,7 @@ namespace netlib
 					data);
 			while(size)
 			{
-				std::size_t sent = send(
+				std::size_t sent = StreamSocket::send(
 					to_send,
 					size);
 				if(!sent)

@@ -6,25 +6,30 @@ The netlib is an object oriented platform independend interface to the C socket 
 
 ## Cloning
 
-Navigate to the directory you want to have the ```netlib``` folder in. Now execute:
+Navigate to the directory you want to have the `netlib` folder in. Now execute:
 
-```git clone https://github.com/RmbRT/netlib.git```
+	git clone https://github.com/RmbRT/netlib.git
+
+Now navigate into the newly created folder `netlib` and execute:
+
+	git submodule init
+	git submodule update
 
 ## Installing / Compiling
 
-Make sure you have CMake installed. Now navigate into the ```netlib``` directory and execute:
+Make sure you have CMake installed. Now navigate into the `netlib` directory and execute:
 
-```cmake .```
+	cmake .
 
 This generates project / make files (depending on your machine configuration). Use these to compile the library.
 
 ## Documentation
 
-Makes sure to have doxygen installed, and navigate to the ```netlib``` directory, and execute:
+Makes sure to have doxygen installed, and navigate to the `netlib` directory, and execute:
 
-```doxygen Doxyfile```
+	doxygen Doxyfile
 
-This will generate a documentation in ```netlib/html```. This file has been set as main page of the documentation. More documentation can be found in ```netlib/docs/```.
+This will generate a documentation in `netlib/html`. This file has been set as main page of the documentation. More documentation can be found in `netlib/docs/`.
 
 ### Existing documentation pages
 
@@ -34,4 +39,4 @@ For a better experience, generate documentation using doxygen, so that reference
 
 ## License
 
-A copy of the license text the netlib is released under can be found in the text file ```netlib/LICENSE```.
+A copy of the license text the netlib is released under can be found in the text file `netlib/LICENSE`.

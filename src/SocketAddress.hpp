@@ -127,7 +127,7 @@ namespace netlib
 		SocketAddress(IPv4SocketAddress const& address);
 		SocketAddress(IPv6SocketAddress const& address);
 		SocketAddress(char const * str);
-		
+
 		static bool parse(
 			char const * str,
 			SocketAddress &out);

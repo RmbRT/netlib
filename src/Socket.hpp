@@ -1,6 +1,5 @@
 /** @file Socket.hpp
-	Contains the Socket classes and functions.
-	This is the 'heart' of the netlib. Main functionality resolving around sockets is all declared in here. */
+	Contains the Socket classes and functions. This is the 'heart' of the netlib. Main functionality resolving around sockets is all declared in here. */
 #ifndef __netlib_socket_hpp_defined
 #define __netlib_socket_hpp_defined
 
@@ -28,10 +27,12 @@ namespace netlib
 		NETLIB_LAST(kSPS), kSequencedPacketStream = kSPS
 	};
 
+#ifdef NETLIB_BUILD
 	/** Converts a socket type to its corresponding native socket api constant. */
 	int to_native_api(
 		SocketType type);
-	
+#endif
+
 	/** Constants used for the Socket::shutdown command. */
 	enum class Shutdown
 	{

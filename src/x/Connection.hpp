@@ -1,3 +1,5 @@
+/** @file Connection.hpp
+	Contains the netlib::x::Connection class used for handling connections. */
 #ifndef __netlib_x_connection_hpp_defined
 #define __netlib_x_connection_hpp_defined
 
@@ -15,7 +17,7 @@ namespace netlib
 		typedef std::uint8_t byte_t;
 
 		/** A network connection.
-			This class extends the behaviour of the netlib::StreamSocket class to create more comforatbly usable functions for more efficient connection handling. Whether a connection is open can be retrieved via `Connections::exists`. Establishing a connection can be done via `Connection::connect`. This class can be used with `netlib::x::ConnectionListener`. */
+			This class extends the behaviour of the netlib::StreamSocket class to create more comforatbly usable functions for more efficient connection handling. Whether a connection is open can be retrieved via `Connection::exists`. Establishing a connection can be done via `Connection::connect`. This class can be used with `netlib::x::ConnectionListener`. */
 		class Connection : private StreamSocket
 		{
 		public:

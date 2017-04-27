@@ -7,7 +7,7 @@ namespace netlib
 {
 	IPv4Address const IPv4Address::kAny = IPv4Address(0,0,0,0);
 
-	
+
 	IPv4Address::IPv4Address(char const * data)
 	{
 		parse(data, *this);
@@ -63,7 +63,7 @@ namespace netlib
 		else
 			return false;
 	}
-	
+
 	SocketAddress::SocketAddress(AddressFamily family):
 		family(family) { }
 	SocketAddress::SocketAddress(IPv4SocketAddress const& ipv4):
@@ -99,7 +99,7 @@ namespace netlib
 		{
 			std::string _str(str);
 			unsigned l = _str.length();
-		
+
 			unsigned last_colon;
 			for(last_colon = l; last_colon--;)
 				if(str[last_colon] == ':')
@@ -108,7 +108,7 @@ namespace netlib
 			if(!last_colon || last_colon == l-1)
 				return false;
 
-		
+
 
 			std::vector<AddressInfo> info = resolve_name(_str.substr(0, last_colon).c_str());
 

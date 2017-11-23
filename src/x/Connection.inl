@@ -11,6 +11,12 @@ namespace netlib
 		}
 
 		bool Connection::send(
+			std::string const& data)
+		{
+			return send(data.data(), data.size());
+		}
+
+		bool Connection::send(
 			std::vector<byte_t> const& data)
 		{
 			return send(data.data(), data.size());

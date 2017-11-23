@@ -30,7 +30,7 @@ namespace netlib
 	{
 		switch(native)
 		{
-		case AF_UNIX: return AddressFamily::kUnix;	
+		case AF_UNIX: return AddressFamily::kUnix;
 		case AF_INET: return AddressFamily::kIPv4;
 		case AF_INET6: return AddressFamily::kIPv6;
 		case AF_IRDA: return AddressFamily::kIrDA;

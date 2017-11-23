@@ -101,11 +101,15 @@ namespace netlib
 		void close();
 		/** Shuts down the socket.
 		@param[in] what:
-			What aspect to shutdown. */
-		int shutdown(Shutdown what);
+			What aspect to shutdown.
+		@return
+			Whether it succeeded. */
+		bool shutdown(
+			Shutdown what);
 
 		/** Whether this Socket exists. */
 		NETLIB_INL bool exists() const;
+		/** Same as `exists()`. */
 		NETLIB_INL operator bool() const;
 
 		/** Returns the address of this Socket. */
@@ -120,7 +124,8 @@ namespace netlib
 	class StreamSocket : public Socket
 	{
 	public:
-		/** Accepts IPv4 and IPv6. */
+		/** Creates a datagram socket for the requested address family.
+			Accepts IPv4 and IPv6. */
 		explicit StreamSocket(
 			AddressFamily);
 		StreamSocket() = default;
@@ -130,19 +135,58 @@ namespace netlib
 		StreamSocket &operator=(StreamSocket const&) = delete;
 		StreamSocket &operator=(StreamSocket &&) = default;
 
-		std::size_t send(void const* data, std::size_t size);
+		/** Sends at most `size` bytes of `data`.
+		@param[in] data:
+			The data to send.
+		@param[in] size:
+			How many bytes to send at most.
+		@return
+			The number of bytes sent, or 0 on error. */
+		std::size_t send(
+			void const* data,
+			std::size_t size);
+		/** Receives at most `size` bytes into `data`.
+		@param[out] data:
+			Where to receive the incoming data into.
+		@param[in] size:
+			How many bytes to receive at most.
+		@return
+			The number of bytes received, or 0 on error. */
 		std::size_t recv(void * data, std::size_t size);
 
-		bool connect(SocketAddress const& addr);
-		bool bind(SocketAddress const& address);
+		/** Tries to connect to `address`.
+		@param[in] address:
+			The address to connect to.
+		@return
+			Whether a connection was established. */
+		bool connect(
+			SocketAddress const& address);
+		/** Tries to bind the socket to `address`.
+		@param[in] address:
+			The address to bind the socket to.
+		@return
+			Whether the socket could be bound to `address`. */
+		bool bind(
+			SocketAddress const& address);
+		/** Listens on the currently bound address.
+		@return
+			Whether it succeeded. */
 		bool listen();
-		bool accept(StreamSocket &out);
+		/** Accepts an incoming connection.
+			This function does not block if `pending()` is `true`.
+		@param[out] out:
+			The socket to hold the incoming connection.
+		@return
+			Whether it succeeded. */
+		bool accept(
+			StreamSocket &out);
 	};
 
 	/** Represents a datagram socket. */
 	class DatagramSocket : public Socket
 	{
 	public:
+		/** Creates a datagram socket for the requested address family. */
 		DatagramSocket(
 			AddressFamily);
 		DatagramSocket &operator=(DatagramSocket &&) = default;
@@ -151,17 +195,39 @@ namespace netlib
 		DatagramSocket &operator=(DatagramSocket const&) = delete;
 		DatagramSocket(DatagramSocket const&) = delete;
 
+		/** Sends at most `size` bytes of `data` to the given address.
+		@param[in] data:
+			The data to send.
+		@param[in] size:
+			How many bytes to send.
+		@param[in] to:
+			The address to send the data to.
+		@param[in] flags:
+			Constant out of a socket api header. Since the set of options is not uniformly implemented across platforms, implementation-specific values have to be put manually.
+		@return
+			The number of bytes received, or 0 on error. */
 		std::size_t sendto(
 			void const * data,
 			std::size_t size,
 			SocketAddress const& to,
-			std::size_t flags);
+			std::size_t flags = 0);
 
+		/** Receives at most `size` bytes into `data` from the given address.
+		@param[in] data:
+			Where to receive the incoming data into.
+		@param[in] size:
+			How many bytes to receive at most.
+		@param[in] to:
+			The address to send the data to.
+		@param[in] flags:
+			Constant out of a socket api header. Since the set of options is not uniformly implemented across platforms, implementation-specific values have to be put manually.
+		@return
+			The number of bytes received, or 0 on error. */
 		std::size_t recvfrom(
 			void * data,
 			std::size_t size,
 			SocketAddress const& from,
-			std::size_t flags);
+			std::size_t flags = 0);
 	};
 }
 

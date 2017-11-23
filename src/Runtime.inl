@@ -2,6 +2,6 @@ namespace netlib
 {
 	bool Runtime::exists()
 	{
-		return *lock::ReadLock<std::size_t>(s_instances) != 0;
+		return s_instances.load(std::memory_order_relaxed) != 0;
 	}
 }

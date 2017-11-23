@@ -3,6 +3,8 @@
 #include "HostInfo.hpp"
 #include "netlib.hpp"
 
+#include <cassert>
+
 namespace netlib
 {
 	IPv4Address const IPv4Address::kAny = IPv4Address(0,0,0,0);

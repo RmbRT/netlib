@@ -152,31 +152,19 @@ namespace netlib
 #define SD_BOTH SHUT_RDWR
 #endif
 
-	int Socket::shutdown(Shutdown param)
+	bool Socket::shutdown(Shutdown param)
 	{
 		assert(Runtime::exists());
 		assert(exists());
 
-		switch(param)
-		{
-		case Shutdown::kReceive:
-			{
-				return ::shutdown(m_socket, SD_RECEIVE);
-			} break;
-		case Shutdown::kSend:
-			{
-				return ::shutdown(m_socket, SD_SEND);
-			} break;
-		case Shutdown::kBoth:
-			{
-				return ::shutdown(m_socket, SD_BOTH);
-			} break;
-		default:
-			{
-				assert(!"Invalid enum value.");
-				return -1;
-			} break;
-		}
+		static int const parameter[] = {
+			SHUT_RD,
+			SHUT_WR,
+			SHUT_RDWR
+		};
+		assert(std::size_t(param) < _countof(parameter));
+
+		return !::shutdown(m_socket, parameter[std::size_t(param)]);
 	}
 
 	size_t StreamSocket::send(
@@ -212,7 +200,7 @@ namespace netlib
 			m_socket,
 			(const char*)data,
 			size,
-			0,
+			flags,
 			reinterpret_cast<::sockaddr const *>(&addr),
 			sizeof(::sockaddr));
 		if(result == -1)
@@ -256,7 +244,7 @@ namespace netlib
 			m_socket,
 			(char*)data,
 			size,
-			0,
+			flags,
 			reinterpret_cast<::sockaddr*>(&addr),
 			&len);
 		if(result == -1)

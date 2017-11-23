@@ -8,6 +8,7 @@
 
 #include <cinttypes>
 #include <vector>
+#include <string>
 
 namespace netlib
 {
@@ -40,7 +41,6 @@ namespace netlib
 
 			Connection(Connection const&) = delete;
 			Connection & operator=(Connection const&) = delete;
-
 
 			/** Receives a chunk of data until none is pending, or until the given maximum count.
 				This call cannot block.
@@ -77,6 +77,15 @@ namespace netlib
 			bool send(
 				void const * data,
 				std::size_t size);
+
+			/** Sends data from a string.
+				Equal to `send(data, data.size())`.
+			@param[in] data:
+				The data to send.
+			@return
+				Whether the sending succeeded. */
+			NETLIB_INL bool send(
+				std::string const& data);
 
 			/** Sends data from a vector.
 			@param[in] data:

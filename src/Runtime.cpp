@@ -7,12 +7,11 @@
 
 namespace netlib
 {
-	lock::ThreadSafe<std::size_t> Runtime::s_instances(0);
+	std::atomic_size_t Runtime::s_instances(0);
 
 	Runtime::Runtime()
 	{
-		lock::WriteLock<std::size_t> w_instances(s_instances);
-		if(!(*w_instances)++)
+		if(1 == s_instances.fetch_add(1, std::memory_order_relaxed))
 		{
 			// if on windows, attempt to initialise the windows socket api.
 #ifdef NETLIB_WINDOWS
@@ -28,10 +27,8 @@ namespace netlib
 
 	Runtime::~Runtime()
 	{
-		lock::WriteLock<std::size_t> w_instances(s_instances);
-
 		// the last instance?
-		if(! --(*w_instances))
+		if(0 == s_instances.fetch_sub(1, std::memory_order_relaxed))
 		{
 			// if on windows, cleanup the windows socket api.
 #ifdef NETLIB_WINDOWS

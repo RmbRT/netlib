@@ -4,7 +4,7 @@
 #define __netlib_runtime_hpp_defined
 
 #include <cstddef>
-#include <Lock/Lock.hpp>
+#include <atomic>
 #include "defines.hpp"
 
 namespace netlib
@@ -14,7 +14,7 @@ namespace netlib
 	class Runtime
 	{
 		/** The number of currently existing instances. */
-		static lock::ThreadSafe<std::size_t> s_instances;
+		static std::atomic_size_t s_instances;
 
 		Runtime(Runtime const&) = delete;
 		Runtime(Runtime &&) = delete;

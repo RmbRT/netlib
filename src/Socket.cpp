@@ -208,7 +208,9 @@ namespace netlib
 		else
 			return result;
 	}
-	size_t StreamSocket::recv(void* data, size_t size)
+	size_t StreamSocket::recv(
+		void* data,
+		size_t size)
 	{
 		assert(Runtime::exists());
 		assert(exists());
@@ -270,7 +272,8 @@ namespace netlib
 			sizeof(::sockaddr));
 	}
 
-	bool StreamSocket::bind(SocketAddress const& address)
+	bool StreamSocket::bind(
+		SocketAddress const& address)
 	{
 		assert(Runtime::exists());
 		assert(exists());
@@ -282,7 +285,8 @@ namespace netlib
 			reinterpret_cast<::sockaddr const *>(&addr),
 			sizeof(::sockaddr));
 	}
-	bool StreamSocket::accept(StreamSocket &socket)
+	bool StreamSocket::accept(
+		StreamSocket &socket)
 	{
 		assert(Runtime::exists());
 		assert(exists());
@@ -336,7 +340,8 @@ namespace netlib
 		assert(family == AddressFamily::kIPv4 || family == AddressFamily::kIPv6);
 	}
 
-	Socket::Socket(Socket &&move):
+	Socket::Socket(
+		Socket &&move):
 		m_address(move.m_address),
 		m_protocol(move.m_protocol),
 		m_type(move.m_type),
@@ -347,7 +352,8 @@ namespace netlib
 		move.m_socket = -1;
 	}
 
-	Socket &Socket::operator=(Socket &&move)
+	Socket &Socket::operator=(
+		Socket &&move)
 	{
 		if(&move == this)
 			return *this;

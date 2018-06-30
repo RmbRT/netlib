@@ -55,7 +55,7 @@ namespace netlib
 				std::size_t max_count);
 
 			/** Receives exactly `count` bytes, or fails.
-				Thsi call may block.
+				This call may block.
 			@param[out] out:
 				The buffer storing the received data.
 			@param[in] count:

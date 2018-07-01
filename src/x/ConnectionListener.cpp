@@ -59,6 +59,10 @@ namespace netlib
 
 		void ConnectionListener::unlisten()
 		{
+			// Call shutdown() to break blocking accept() calls.
+			if(exists())
+				shutdown(Shutdown::kBoth);
+
 			close();
 			m_listening = false;
 		}

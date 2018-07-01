@@ -82,6 +82,11 @@ namespace netlib
 		static bool parse(
 			char const * data,
 			IPv6Address &out);
+
+		/** Tests for equality of two IP addresses. */
+		constexpr bool operator==(IPv6Address const& other) const;
+		/** Tests for inequality of two IP addresses. */
+		constexpr bool operator!=(IPv6Address const&) const;
 	};
 
 	/** IPv4 socket address. */
@@ -116,6 +121,9 @@ namespace netlib
 		std::uint32_t field;
 		IPv6Address address;
 		std::uint32_t scope;
+
+		bool operator==(IPv6SocketAddress const& other) const;
+		bool operator!=(IPv6SocketAddress const& other) const;
 	};
 
 
@@ -131,6 +139,9 @@ namespace netlib
 		static bool parse(
 			char const * str,
 			SocketAddress &out);
+
+		bool operator==(SocketAddress const& other) const;
+		bool operator!=(SocketAddress const& other) const;
 
 		AddressFamily family;
 		union

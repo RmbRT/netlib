@@ -66,6 +66,22 @@ namespace netlib
 			return false;
 	}
 
+	bool IPv6SocketAddress::operator==(IPv6SocketAddress const& other) const
+	{
+		return port == other.port
+			&& field == other.field
+			&& address == other.address
+			&& scope == other.scope;
+	}
+
+	bool IPv6SocketAddress::operator!=(IPv6SocketAddress const& other) const
+	{
+		return port != other.port
+			|| field != other.field
+			|| address != other.address
+			|| scope != other.scope;
+	}
+
 	SocketAddress::SocketAddress(AddressFamily family):
 		family(family) { }
 	SocketAddress::SocketAddress(IPv4SocketAddress const& ipv4):
@@ -138,6 +154,28 @@ namespace netlib
 			else
 				return false;
 		}
+	}
+
+
+	bool SocketAddress::operator==(SocketAddress const& other) const
+	{
+		if(family != other.family)
+			return false;
+		else if(family == AddressFamily::kIPv4)
+		{
+			return address.ipv4 == other.address.ipv4;
+		} else if(family == AddressFamily::kIPv6)
+		{
+			return address.ipv6 == other.address.ipv6;
+		} else
+		{
+			assert(!"Address family not supported.");
+		}
+	}
+
+	bool SocketAddress::operator!=(SocketAddress const& other) const
+	{
+		return !(*this == other);
 	}
 
 }

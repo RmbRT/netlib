@@ -152,7 +152,9 @@ namespace netlib
 			How many bytes to receive at most.
 		@return
 			The number of bytes received, or 0 on error. */
-		std::size_t recv(void * data, std::size_t size);
+		std::size_t recv(
+			void * data,
+			std::size_t size);
 
 		/** Tries to connect to `address`.
 		@param[in] address:

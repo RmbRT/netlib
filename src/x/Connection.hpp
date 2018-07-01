@@ -63,6 +63,18 @@ namespace netlib
 			@return
 				Whether the receiving succeeded. */
 			bool receive(
+				void * out,
+				std::size_t count);
+
+			/** Receives exactly `count` bytes, or fails.
+				This call may block.
+			@param[out] out:
+				The buffer storing the received data.
+			@param[in] count:
+				The expected number of bytes.
+			@return
+				Whether the receiving succeeded. */
+			bool receive(
 				std::vector<byte_t> & out,
 				std::size_t count);
 

@@ -32,6 +32,24 @@ namespace netlib
 		}
 
 		bool Connection::receive(
+			void * out,
+			std::size_t count)
+		{
+			std::size_t received = 0;
+
+			while(received != count)
+			{
+				std::size_t recv_count = count - received;
+				if(!(recv_count = recv(reinterpret_cast<std::uint8_t *>(out) + received, recv_count)))
+					return false;
+
+				received += recv_count;
+			}
+
+			return true;
+		}
+
+		bool Connection::receive(
 			std::vector<byte_t> & out,
 			std::size_t count)
 		{

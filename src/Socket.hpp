@@ -166,10 +166,13 @@ namespace netlib
 		/** Tries to bind the socket to `address`.
 		@param[in] address:
 			The address to bind the socket to.
+		@param[in] reuse_address:
+			Whether to attempt reusing the address.
 		@return
 			Whether the socket could be bound to `address`. */
 		bool bind(
-			SocketAddress const& address);
+			SocketAddress const& address,
+			bool reuse_address = false);
 		/** Listens on the currently bound address.
 		@return
 			Whether it succeeded. */

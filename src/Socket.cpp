@@ -273,10 +273,23 @@ namespace netlib
 	}
 
 	bool StreamSocket::bind(
-		SocketAddress const& address)
+		SocketAddress const& address,
+		bool reuse_address)
 	{
 		assert(Runtime::exists());
 		assert(exists());
+
+		if(reuse_address)
+		{
+			static int const enable = 1;
+			if(SOCKET_ERROR == ::setsockopt(
+				m_socket,
+				SOL_SOCKET,
+				SO_REUSEADDR,
+				&enable,
+				sizeof(enable)))
+				return false;
+		}
 
 		m_address = address;
 		::sockaddr_storage addr = to_sockaddr_storage(m_address);

@@ -45,7 +45,8 @@ namespace netlib
 		}
 
 		bool ConnectionListener::listen(
-			SocketAddress const& listen_addr)
+			SocketAddress const& listen_addr,
+			bool reuse_address)
 		{
 			unlisten();
 
@@ -53,8 +54,8 @@ namespace netlib
 				*(StreamSocket *)this = StreamSocket(listen_addr.family);
 
 			return m_listening = exists()
-				&& bind(listen_addr)
-				&& static_cast<StreamSocket *>(this)->listen();
+				&& bind(listen_addr, reuse_address)
+				&& StreamSocket::listen();
 		}
 
 		void ConnectionListener::unlisten()

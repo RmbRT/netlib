@@ -39,9 +39,13 @@ namespace netlib
 				If succeeds, the connection listener can receive incoming connections. The result may at later points in time also be retrieved via listening().
 			@param[in] listen_addr:
 				The port and address that should be bound to.
+			@param[in] reuse_address:
+				Whether to attempt to reuse the address.
 			@return
 				Whether the binding succeeded or not. */
-			bool listen(netlib::SocketAddress const& listen_addr);
+			bool listen(
+				netlib::SocketAddress const& listen_addr,
+				bool reuse_address = false);
 
 			/** Stops listening for incoming connections. */
 			void unlisten();

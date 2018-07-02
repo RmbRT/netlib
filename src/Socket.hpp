@@ -167,7 +167,7 @@ namespace netlib
 		@param[in] address:
 			The address to bind the socket to.
 		@param[in] reuse_address:
-			Whether to attempt reusing the address.
+			Whether to attempt to reuse the address.
 		@return
 			Whether the socket could be bound to `address`. */
 		bool bind(

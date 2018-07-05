@@ -18,7 +18,7 @@ namespace netlib
 		typedef std::uint8_t byte_t;
 
 		/** A network connection.
-			This class extends the behaviour of the netlib::StreamSocket class to create more comforatbly usable functions for more efficient connection handling. Whether a connection is open can be retrieved via `Connection::exists`. Establishing a connection can be done via `Connection::connect`. This class can be used with `netlib::x::ConnectionListener`. */
+			This class extends the behaviour of the netlib::StreamSocket class to create more comfortably usable functions for more efficient connection handling. Whether a connection is open can be retrieved via `Connection::exists`. Establishing a connection can be done via `Connection::connect`. This class can be used with `netlib::x::ConnectionListener`. */
 		class Connection : private StreamSocket
 		{
 		public:
@@ -27,6 +27,7 @@ namespace netlib
 			using StreamSocket::close;
 			using StreamSocket::shutdown;
 			using StreamSocket::connect;
+			using StreamSocket::pending;
 
 			/** Creates a closed connection. */
 			Connection() = default;

@@ -324,19 +324,51 @@ namespace netlib
 		return true;
 	}
 
-	bool Socket::pending()
+	bool Socket::pending(
+		std::size_t ns_timeout)
 	{
 		assert(Runtime::exists());
 		assert(exists());
 
-		fd_set set;
-		FD_ZERO(&set);
-		FD_SET(m_socket, &set);
+		::pollfd fd;
+		fd.fd = m_socket;
+		fd.events = POLLIN;
 
-		timeval val = { 0, 0 };
+		::timespec ts;
+		ts.tv_sec = ns_timeout / 1000000000;
+		ts.tv_nsec = ns_timeout % 1000000000;
 
 		::select(m_socket+1,&set,0,0,&val);
 		return 0 != FD_ISSET(m_socket, &set);
+	}
+
+	void Socket::pending(
+		Socket const * const * sockets,
+		bool * pending,
+		std::size_t count,
+		std::size_t us_timeout)
+	{
+		assert(Runtime::exists());
+		assert(sockets != nullptr);
+		assert(pending != nullptr);
+
+		fd_set set;
+		FD_ZERO(&set);
+
+		std::uintptr_t highest_socket = 0;
+		for(std::size_t i = 0; i < count; i++)
+		{
+			FD_SET(sockets[i]->m_socket, &set);
+			if(sockets[i]->m_socket > highest_socket)
+				highest_socket = sockets[i]->m_socket;
+		}
+
+		timeval val = { long(us_timeout / 1000000), long(us_timeout % 1000000) };
+
+		::select(highest_socket+1, &set, 0,0, &val);
+
+		for(std::size_t i = 0; i < count; i++)
+			pending[i] = FD_ISSET(sockets[i]->m_socket, &set);
 	}
 
 	bool StreamSocket::listen()

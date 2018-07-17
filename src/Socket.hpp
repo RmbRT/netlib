@@ -94,9 +94,31 @@ namespace netlib
 		Socket(Socket &&);
 		Socket &operator=(Socket &&);
 
+		/** recv, recvfrom or accept will not block if this returns true.
+			Waits until input is pending, or until the timeout.
+		@param[in] ns_timeout:
+			The timeout, in nanoseconds.
+		@return
+			Whether there was some pending input within the timeout. */
+		bool pending(
+			std::size_t ns_timeout = 0);
 
-		/** recv, recvfrom or accept will not block if this returns true.*/
-		bool pending();
+		/** Waits for input on at least one of the supplied sockets, or until the timeout.
+		@param[in] sockets:
+			The sockets to check for.
+		@param[out] pending:
+			Whether there is input pending on a socket.
+			If there is pending input, then recv, recvfrom and accept will not block.
+		@param[in] count:
+			The amount of sockets supplied.
+		@param[in] ns_timeout:
+			The timeout, in manooseconds. */
+		static void pending(
+			Socket const * const * sockets,
+			bool * pending,
+			std::size_t count,
+			std::size_t ns_timeout = 0);
+
 		/** Closes the socket. */
 		void close();
 		/** Shuts down the socket.

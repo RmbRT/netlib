@@ -1,4 +1,5 @@
 #include "Poller.hpp"
+#include "Socket.hpp"
 
 #ifdef NETLIB_EPOLL
 #include <sys/epoll.h>
@@ -32,9 +33,57 @@ namespace netlib
 		watch(sockets, count);
 	}
 
+	Poller::Poller(
+		Poller && move):
+		m_sockets(std::move(move.m_sockets)),
+#ifdef NETLIB_EPOLL
+		m_poller(move.m_poller),
+		m_event_list(move.m_event_list),
+		m_event_list_capacity(move.m_event_list_capacity)
+#else
+		m_poll_list(move.m_poll_list),
+		m_poll_list_capacity(move.m_poll_list_capacity)
+#endif
+
+	{
+		// Reinitialise the other poller to empty.
+		new (&move) Poller();
+	}
+
+	Poller &Poller::operator=(
+		Poller && move)
+	{
+		if(this == &move)
+			return *this;
+
+		unwatch_all();
+		m_sockets = std::move(move.m_sockets);
+
+#ifdef NETLIB_EPOLL
+		m_poller = move.m_poller;
+		m_event_list = move.m_event_list;
+		m_event_list_capacity = move.m_event_list_capacity;
+#else
+		m_poll_list = move.m_poll_list;
+		m_poll_list_capacity = move.m_poll_list_capacity;
+#endif
+		new (&move) Poller();
+
+		return *this;
+	}
+
 	Poller::~Poller()
 	{
 		unwatch_all();
+	}
+
+	bool Poller::watching(
+		Socket * socket) const
+	{
+		assert(socket != nullptr);
+		assert(socket->exists());
+
+		return m_sockets.find(socket->m_socket) != m_sockets.end();
 	}
 
 	bool Poller::watch(
@@ -160,7 +209,8 @@ namespace netlib
 		std::vector<Socket *> &pending,
 		std::size_t ms_timeout)
 	{
-		assert(!m_sockets.empty());
+		if(m_sockets.empty())
+			return true;
 
 #ifdef NETLIB_EPOLL
 		assert(m_poller != INVALID_POLLER);

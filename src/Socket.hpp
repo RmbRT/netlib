@@ -6,6 +6,7 @@
 #include "defines.hpp"
 #include "Protocol.hpp"
 #include "SocketAddress.hpp"
+#include "Poller.hpp"
 
 namespace netlib
 {
@@ -43,8 +44,6 @@ namespace netlib
 		/** Stop both. */
 		kBoth
 	};
-
-	class Poller;
 
 	/** Basic Socket class.
 		Represents a generic Socket and contains functions that all types of Sockets have. */

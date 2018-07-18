@@ -1,8 +1,6 @@
 #ifndef __netlib_poller_hpp_defined
 #define __netlib_poller_hpp_defined
 
-#include "Socket.hpp"
-
 #include <unordered_map>
 #include <vector>
 
@@ -14,6 +12,8 @@
 
 namespace netlib
 {
+	class Socket;
+
 	/** Efficiently polls socket updates.
 		Uses `epoll()` when available, otherwise uses `poll()`. */
 	class Poller
@@ -37,6 +37,21 @@ namespace netlib
 		/** Creates an empty poller. */
 		Poller();
 
+		/** Moves a poller instance.
+		@param[in] move:
+			The poller instance to move. */
+		Poller(
+			Poller && move);
+
+		/** Moves a poller instance.
+			The destination instance is destroyed.
+		@param[in] move:
+			The poller instance to move.
+		@return
+			The destination instance. */
+		Poller &operator=(
+			Poller && move);
+
 		/** Creates a poller that watches the requested sockets.
 		@param[in] sockets:
 			The sockets to watch.
@@ -48,6 +63,17 @@ namespace netlib
 
 		/** Destroys the poller and frees its resources. */
 		~Poller();
+
+		/** Returns the number of watched sockets. */
+		inline std::size_t watched() const;
+
+		/** Detects whether the poller is watching a socket.
+		@param[in] socket:
+			The socket to check for.
+		@return
+			Whether the socket is being watched. */
+		bool watching(
+			Socket * socket) const;
 
 		/** Watches sockets.
 		@param[in] sockets:
@@ -110,5 +136,7 @@ namespace netlib
 			std::size_t size);
 	};
 }
+
+#include "Poller.inl"
 
 #endif

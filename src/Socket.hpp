@@ -44,10 +44,13 @@ namespace netlib
 		kBoth
 	};
 
+	class Poller;
+
 	/** Basic Socket class.
 		Represents a generic Socket and contains functions that all types of Sockets have. */
 	class Socket
 	{
+		friend class ::netlib::Poller;
 	protected:
 		/** The socket address. */
 		SocketAddress m_address;

@@ -7,6 +7,8 @@
 #include <type_traits>
 #include <cstring>
 
+#include <poll.h>
+
 #ifndef SOCKET_ERROR
 int const SOCKET_ERROR = -1;
 #endif
@@ -330,7 +332,7 @@ namespace netlib
 		assert(Runtime::exists());
 		assert(exists());
 
-		::pollfd fd;
+		struct ::pollfd fd;
 		fd.fd = m_socket;
 		fd.events = POLLIN;
 
@@ -338,8 +340,8 @@ namespace netlib
 		ts.tv_sec = ns_timeout / 1000000000;
 		ts.tv_nsec = ns_timeout % 1000000000;
 
-		::select(m_socket+1,&set,0,0,&val);
-		return 0 != FD_ISSET(m_socket, &set);
+		::poll(&fd, 1, ns_timeout);
+		return fd.revents & POLLIN;
 	}
 
 	void Socket::pending(

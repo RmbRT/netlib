@@ -14,7 +14,8 @@
 
 namespace netlib
 {
-	/** Efficiently polls socket updates. */
+	/** Efficiently polls socket updates.
+		Uses `epoll()` when available, otherwise uses `poll()`. */
 	class Poller
 	{
 		/** The watched sockets. */
@@ -22,9 +23,14 @@ namespace netlib
 #ifdef NETLIB_EPOLL
 		/** The poller object. */
 		std::uintptr_t m_poller;
+		/** The list of epoll events. */
+		void * m_event_list;
+		/** The list capacity. */
+		std::size_t m_event_list_capacity;
 #else
+		/** The list of poll entries. */
 		void * m_poll_list;
-		std::size_t m_poll_list_size;
+		/** The list capacity. */
 		std::size_t m_poll_list_capacity;
 #endif
 	public:
@@ -40,17 +46,25 @@ namespace netlib
 			Socket * const * sockets,
 			std::size_t count);
 
+		/** Destroys the poller and frees its resources. */
 		~Poller();
 
 		/** Watches sockets.
 		@param[in] sockets:
 			The sockets to watch.
 		@param[in] count:
-			The socket count. */
+			The socket count.
+		@return
+			Whether it succeeded. */
 		bool watch(
 			Socket * const * sockets,
 			std::size_t count);
 
+		/** Watches a single socket.
+		@param[in] socket:
+			The socket to watch.
+		@return
+			Whether it succeeded. */
 		bool watch(
 			Socket * socket);
 
@@ -58,32 +72,42 @@ namespace netlib
 		@param[in] sockets:
 			The sockets to unwatch.
 		@param[in] count:
-			The socket count. */
+			The socket count.
+		@return
+			Whether it succeeded. */
 		bool unwatch(
 			Socket * const * sockets,
 			std::size_t count);
 
+		/** Unwatches a single socket.
+		@param[in] socket:
+			The socket to unwatch.
+		@return
+			Whether it succeeded. */
 		bool unwatch(
 			Socket * socket);
 
-		bool unwatch_all();
+		/** Unwatches all sockets and frees all resources. */
+		void unwatch_all();
 
 		/** Polls updated sockets.
 			Waits until at least one socket has pending input, or the timeout expires.
 		@param[out] pending:
 			The sockets with pending input.
-		@param[in] timeout:
-			The timeout. */
+		@param[in] ms_timeout:
+			The timeout in milliseconds.
+			0 for non-blocking, -1 for infinite timeout.
+		@return
+			Whether it succeeded. */
 		bool poll(
 			std::vector<Socket *> &pending,
-			std::size_t timeout = 0);
+			std::size_t ms_timeout = 0);
 
-	private:
-#ifndef NETLIB_EPOLL
+		/** Reserves space for `size` sockets.
+		@param[in] size:
+			How many sockets to prepare for. */
 		void reserve(
-			std::size_t entries);
-#endif
-
+			std::size_t size);
 	};
 }
 

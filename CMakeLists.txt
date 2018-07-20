@@ -14,5 +14,5 @@ include_directories(depend/Lock/include)
 
 # Creates an include directory containing all header files used in the netlib.
 # Add /netlib/include/ to your include directories and access the files via #include <netlib/*>
-file(COPY "src/" DESTINATION "include/netlib/" FILES_MATCHING PATTERN "*.hpp" PATTERN "*.inl")
-file(COPY "depend/Lock/include/" DESTINATION "include/" FILES_MATCHING PATTERN "*.hpp" PATTERN "*.inl")
+file(COPY "src/" DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include/netlib/ FILES_MATCHING PATTERN "*.hpp" PATTERN "*.inl")
+file(COPY "depend/Lock/include/" DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include/ FILES_MATCHING PATTERN "*.hpp" PATTERN "*.inl")

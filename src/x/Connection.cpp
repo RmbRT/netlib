@@ -14,24 +14,28 @@ namespace netlib
 			// for thread safety.
 			static thread_local std::vector<byte_t> buffer(4096);
 
-			while(pending() && out.size() < max_count)
-			{
+			std::size_t count = receive_pending(buffer, max_count);
 
-				std::size_t recv_count = (out.size() + buffer.size() > max_count)
-					? max_count - out.size()
-					: buffer.size();
-				std::size_t count = recv(buffer.data(), recv_count);
-				// error?
-				if(!count)
-					return false;
+			if(!count)
+				return false;
 
-				out.insert(out.end(), buffer.begin(), buffer.begin() + count);
-			}
+			out.insert(out.end(), buffer.begin(), buffer.begin() + count);
 
 			return true;
 		}
 
-		bool Connection::receive(
+		std::size_t Connection::receive_pending(
+			void * out,
+			std::size_t max_count)
+		{
+			if(!async()
+			&& !pending())
+				return 0;
+
+			return recv(out, max_count);
+		}
+
+		bool Connection::receive_all(
 			void * out,
 			std::size_t count)
 		{
@@ -40,7 +44,8 @@ namespace netlib
 			while(received != count)
 			{
 				std::size_t recv_count = count - received;
-				if(!(recv_count = recv(reinterpret_cast<std::uint8_t *>(out) + received, recv_count)))
+				if(!(recv_count = recv(reinterpret_cast<std::uint8_t *>(out) + received, recv_count))
+				&& !(async() && would_block()))
 					return false;
 
 				received += recv_count;
@@ -49,7 +54,7 @@ namespace netlib
 			return true;
 		}
 
-		bool Connection::receive(
+		bool Connection::receive_all(
 			std::vector<byte_t> & out,
 			std::size_t count)
 		{
@@ -59,7 +64,8 @@ namespace netlib
 			while(received != count)
 			{
 				std::size_t recv_count = count - received;
-				if(!(recv_count = recv(out.data() + received, recv_count)))
+				if(!(recv_count = recv(out.data() + received, recv_count))
+				&& !(async() && would_block()))
 					// error?
 					return false;
 
@@ -69,7 +75,7 @@ namespace netlib
 			return true;
 		}
 
-		bool Connection::send(
+		bool Connection::send_all(
 			void const * data,
 			std::size_t size)
 		{
@@ -81,8 +87,11 @@ namespace netlib
 				std::size_t sent = StreamSocket::send(
 					to_send,
 					size);
-				if(!sent)
+
+				if(!sent
+				&& !(async() && would_block()))
 					return false;
+
 				size -= sent;
 				to_send += sent;
 			}

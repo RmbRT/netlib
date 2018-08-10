@@ -8,6 +8,7 @@
 #include <cstring>
 
 #include <poll.h>
+#include <fcntl.h>
 
 #ifndef SOCKET_ERROR
 int const SOCKET_ERROR = -1;
@@ -91,7 +92,8 @@ namespace netlib
 		m_address(address),
 		m_type(type),
 		m_protocol(protocol),
-		m_socket(-1)
+		m_socket(),
+		m_async(false)
 	{
 		assert(Runtime::exists());
 
@@ -102,13 +104,49 @@ namespace netlib
 	}
 
 	Socket::Socket(
+		async_t,
+		SocketAddress const& address,
+		SocketType type,
+		Protocol protocol):
+		m_address(address),
+		m_type(type),
+		m_protocol(protocol),
+		m_socket(),
+		m_async()
+	{
+		assert(Runtime::exists());
+
+// Create nonblocking socket atomically, if possible.
+#ifdef __unix__
+		m_socket = ::socket(
+			to_native_api(address.family),
+			to_native_api(type) | SOCK_NONBLOCK,
+			to_native_api(protocol));
+
+		m_async = true;
+#else
+		m_socket = ::socket(
+			to_native_api(address.family),
+			to_native_api(type)),
+			to_native_api(protocol));
+
+		if(exists())
+		{
+			m_async = false;
+			set_async(true);
+		}
+#endif
+	}
+
+	Socket::Socket(
 		AddressFamily family,
 		SocketType type,
 		Protocol protocol):
 		m_address(family),
 		m_type(type),
 		m_protocol(protocol),
-		m_socket(-1)
+		m_socket(-1),
+		m_async(false)
 	{
 		assert(Runtime::exists());
 
@@ -118,11 +156,47 @@ namespace netlib
 			to_native_api(protocol));
 	}
 
+	Socket::Socket(
+		async_t,
+		AddressFamily family,
+		SocketType type,
+		Protocol protocol):
+		m_address(family),
+		m_type(type),
+		m_protocol(protocol),
+		m_socket(-1),
+		m_async(false)
+	{
+		assert(Runtime::exists());
+
+// Create nonblocking socket atomically, if possible.
+#ifdef __unix__
+		m_socket = ::socket(
+			to_native_api(m_address.family),
+			to_native_api(type) | SOCK_NONBLOCK,
+			to_native_api(protocol));
+
+		m_async = true;
+#else
+		m_socket = ::socket(
+			to_native_api(m_address.family),
+			to_native_api(type)),
+			to_native_api(protocol));
+
+		if(exists())
+		{
+			m_async = false;
+			set_async(true);
+		}
+#endif
+	}
+
 	Socket::Socket():
-		m_address(IPv4SocketAddress("")),
+		m_address(),
 		m_type(),
 		m_protocol(),
-		m_socket(-1)
+		m_socket(-1),
+		m_async()
 	{
 	}
 
@@ -167,6 +241,38 @@ namespace netlib
 		assert(std::size_t(param) < _countof(parameter));
 
 		return !::shutdown(m_socket, parameter[std::size_t(param)]);
+	}
+
+	bool Socket::set_async(
+		bool async)
+	{
+		assert(Runtime::exists());
+		assert(exists());
+		if(async != m_async)
+		{
+#ifdef NETLIB_WINDOWS
+			unsigned long mode = async ? 1 : 0;
+			if(ioctlsocket(m_socket, FIONBIO, &mode))
+				return false;
+#else
+			int flags = fcntl(m_socket, F_GETFL, 0);
+			if(async)
+				flags |= O_NONBLOCK;
+			else
+				flags &= ~O_NONBLOCK;
+
+			if(fcntl(m_socket, F_SETFL, flags))
+				return false;
+#endif
+			m_async = async;
+		}
+		return true;
+	}
+
+	bool Socket::would_block()
+	{
+		return errno == EWOULDBLOCK
+			|| errno == EAGAIN;
 	}
 
 	size_t StreamSocket::send(
@@ -392,7 +498,8 @@ namespace netlib
 		m_address(move.m_address),
 		m_protocol(move.m_protocol),
 		m_type(move.m_type),
-		m_socket(move.m_socket)
+		m_socket(move.m_socket),
+		m_async(move.m_async)
 	{
 		assert(&move != this);
 
@@ -410,6 +517,7 @@ namespace netlib
 		m_type = move.m_type;
 		m_protocol = move.m_protocol;
 		m_address = move.m_address;
+		m_async = move.m_async;
 		move.m_socket = -1;
 
 		return *this;

@@ -45,6 +45,9 @@ namespace netlib
 		kBoth
 	};
 
+	/** Asynchronous symbolic constant. */
+	static struct async_t {} const kAsync;
+
 	/** Basic Socket class.
 		Represents a generic Socket and contains functions that all types of Sockets have. */
 	class Socket
@@ -59,6 +62,8 @@ namespace netlib
 		SocketType m_type;
 		/** The socket handle. */
 		std::uintptr_t m_socket;
+		/** Whether the socket is in nonblocking mode. */
+		bool m_async;
 	public:
 		/** Creates an empty socket. */
 		Socket();
@@ -73,6 +78,20 @@ namespace netlib
 			AddressFamily family,
 			SocketType type,
 			Protocol protocol = Protocol::kDefault);
+
+		/** Creates and allocates an asynchronous socket of the given characteristics.
+		@param[in] family:
+			The address family of the socket.
+		@param[in] type:
+			The type of the socket.
+		@param[in] protocol:
+			The socket's protocol. */
+		Socket(
+			async_t,
+			AddressFamily family,
+			SocketType type,
+			Protocol protocol = Protocol::kDefault);
+
 		/** Creates and allocates a socket of the given characteristics.
 			Does not connect to the given address, but saves it.
 		@param[in] address:
@@ -85,6 +104,21 @@ namespace netlib
 			SocketAddress const& address,
 			SocketType type,
 			Protocol protocol = Protocol::kDefault);
+
+		/** Creates and allocates an asynchrounous socket of the given characteristics.
+			Does not connect to the given address, but saves it.
+		@param[in] address:
+			Indicates the address family used by the socket.
+		@param[in] type:
+			The socket's type.
+		@param[in] protocol:
+			The socket's protocol. */
+		Socket(
+			async_t,
+			SocketAddress const& address,
+			SocketType type,
+			Protocol protocol = Protocol::kDefault);
+
 		/** Closes the socket, if it exists. */
 		~Socket();
 
@@ -130,6 +164,18 @@ namespace netlib
 			Whether it succeeded. */
 		bool shutdown(
 			Shutdown what);
+
+		/** Sets the Socket's operating mode.
+		@param[in] async:
+			Whether to set the socket to asynchronous. */
+		bool set_async(
+			bool async);
+
+		/** Returns whether a previous operation failed due to a potential blocking. */
+		static bool would_block();
+
+		/** Whether this Socket is in asynchronous mode. */
+		NETLIB_INL bool async() const;
 
 		/** Whether this Socket exists. */
 		NETLIB_INL bool exists() const;

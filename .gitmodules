@@ -1,0 +1,3 @@
+[submodule "depend/libcr"]
+	path = depend/libcr
+	url = https://github.com/sm2coin/libcr

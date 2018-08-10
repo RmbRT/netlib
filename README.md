@@ -10,11 +10,6 @@ Navigate to the directory you want to have the `netlib` folder in. Now execute:
 
 	git clone https://github.com/RmbRT/netlib.git
 
-Now navigate into the newly created folder `netlib` and execute:
-
-	git submodule init
-	git submodule update
-
 ## Installing / Compiling
 
 Make sure you have CMake installed. Now navigate into the `netlib` directory and execute:
@@ -22,6 +17,7 @@ Make sure you have CMake installed. Now navigate into the `netlib` directory and
 	cmake .
 
 This generates project / make files (depending on your machine configuration). Use these to compile the library.
+It also downloads any dependencies and creates an include directory that can be used to import netlib into other projects.
 
 ## Documentation
 

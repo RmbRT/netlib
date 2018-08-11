@@ -17,6 +17,7 @@ namespace netlib
 #ifdef NETLIB_EPOLL
 		m_poller(INVALID_POLLER),
 		m_event_list(nullptr),
+		m_event_list_size(0),
 		m_event_list_capacity(0)
 #else
 		m_poll_list(nullptr),
@@ -40,6 +41,7 @@ namespace netlib
 #ifdef NETLIB_EPOLL
 		m_poller(move.m_poller),
 		m_event_list(move.m_event_list),
+		m_event_list_size(move.m_event_list_size),
 		m_event_list_capacity(move.m_event_list_capacity)
 #else
 		m_sockets(std::move(move.m_sockets)),
@@ -63,6 +65,7 @@ namespace netlib
 #ifdef NETLIB_EPOLL
 		m_poller = move.m_poller;
 		m_event_list = move.m_event_list;
+		m_event_list_size = move.m_event_list_size;
 		m_event_list_capacity = move.m_event_list_capacity;
 #else
 		m_sockets = std::move(move.m_sockets);
@@ -77,14 +80,6 @@ namespace netlib
 	Poller::~Poller()
 	{
 		unwatch_all();
-
-#ifdef NETLIB_EPOLL
-		if(m_poller != INVALID_POLLER)
-		{
-			::close(m_poller);
-			m_poller = INVALID_POLLER;
-		}
-#endif
 	}
 
 	bool Poller::watch(
@@ -184,6 +179,8 @@ namespace netlib
 		// Return false if the socket was not watched.
 		if(-1 == epoll_ctl(m_poller, EPOLL_CTL_DEL, socket->m_socket, &event))
 			return false;
+
+		--m_event_list_size;
 #else
 		bool found = false;
 		std::size_t index;

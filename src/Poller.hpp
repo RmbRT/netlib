@@ -14,12 +14,23 @@ namespace netlib
 {
 	class Socket;
 
+	/** Socket polling event type. */
+	struct PollEvent
+	{
+		/** The socket the event belongs to. */
+		Socket * socket;
+		/** Whether the socket has new data available for reading. */
+		bool can_read;
+		/** Whether the socket's output buffer is available. */
+		bool can_write;
+		/** Whether there was an error with the socket. */
+		bool error;
+	};
+
 	/** Efficiently polls socket updates.
 		Uses `epoll()` when available, otherwise uses `poll()`. */
 	class Poller
 	{
-		/** The watched sockets. */
-		std::unordered_map<std::uintptr_t, Socket *> m_sockets;
 #ifdef NETLIB_EPOLL
 		/** The poller object. */
 		std::uintptr_t m_poller;
@@ -27,11 +38,14 @@ namespace netlib
 		void * m_event_list;
 		/** The list capacity. */
 		std::size_t m_event_list_capacity;
+		std::size_t m_event_list_size;
 #else
 		/** The list of poll entries. */
 		void * m_poll_list;
 		/** The list capacity. */
 		std::size_t m_poll_list_capacity;
+		/** The watched sockets. */
+		std::unordered_map<std::uintptr_t, Socket *> m_sockets;
 #endif
 	public:
 		/** Creates an empty poller. */
@@ -59,21 +73,12 @@ namespace netlib
 			The socket count. */
 		explicit Poller(
 			Socket * const * sockets,
-			std::size_t count);
+			std::size_t count,
+			bool read,
+			bool write);
 
 		/** Destroys the poller and frees its resources. */
 		~Poller();
-
-		/** Returns the number of watched sockets. */
-		inline std::size_t watched() const;
-
-		/** Detects whether the poller is watching a socket.
-		@param[in] socket:
-			The socket to check for.
-		@return
-			Whether the socket is being watched. */
-		bool watching(
-			Socket * socket) const;
 
 		/** Watches sockets.
 		@param[in] sockets:
@@ -84,7 +89,9 @@ namespace netlib
 			Whether it succeeded. */
 		bool watch(
 			Socket * const * sockets,
-			std::size_t count);
+			std::size_t count,
+			bool read,
+			bool write);
 
 		/** Watches a single socket.
 		@param[in] socket:
@@ -92,7 +99,9 @@ namespace netlib
 		@return
 			Whether it succeeded. */
 		bool watch(
-			Socket * socket);
+			Socket * socket,
+			bool read,
+			bool write);
 
 		/** Unwatches sockets.
 		@param[in] sockets:
@@ -117,16 +126,16 @@ namespace netlib
 		void unwatch_all();
 
 		/** Polls updated sockets.
-			Waits until at least one socket has pending input, or the timeout expires.
-		@param[out] pending:
-			The sockets with pending input.
+			Waits until at least one event occurs, or until the timeout expires.
+		@param[out] events:
+			A list of the polled events.
 		@param[in] ms_timeout:
 			The timeout in milliseconds.
 			0 for non-blocking, -1 for infinite timeout.
 		@return
 			Whether it succeeded. */
 		bool poll(
-			std::vector<Socket *> &pending,
+			std::vector<PollEvent> &events,
 			std::size_t ms_timeout = 0);
 
 		/** Reserves space for `size` sockets.
@@ -136,7 +145,5 @@ namespace netlib
 			std::size_t size);
 	};
 }
-
-#include "Poller.inl"
 
 #endif

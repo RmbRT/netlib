@@ -27,20 +27,22 @@ namespace netlib
 
 	Poller::Poller(
 		Socket * const * sockets,
-		std::size_t count):
+		std::size_t count,
+		bool read,
+		bool write):
 		Poller()
 	{
-		watch(sockets, count);
+		watch(sockets, count, read, write);
 	}
 
 	Poller::Poller(
 		Poller && move):
-		m_sockets(std::move(move.m_sockets)),
 #ifdef NETLIB_EPOLL
 		m_poller(move.m_poller),
 		m_event_list(move.m_event_list),
 		m_event_list_capacity(move.m_event_list_capacity)
 #else
+		m_sockets(std::move(move.m_sockets)),
 		m_poll_list(move.m_poll_list),
 		m_poll_list_capacity(move.m_poll_list_capacity)
 #endif
@@ -57,13 +59,13 @@ namespace netlib
 			return *this;
 
 		unwatch_all();
-		m_sockets = std::move(move.m_sockets);
 
 #ifdef NETLIB_EPOLL
 		m_poller = move.m_poller;
 		m_event_list = move.m_event_list;
 		m_event_list_capacity = move.m_event_list_capacity;
 #else
+		m_sockets = std::move(move.m_sockets);
 		m_poll_list = move.m_poll_list;
 		m_poll_list_capacity = move.m_poll_list_capacity;
 #endif
@@ -75,41 +77,48 @@ namespace netlib
 	Poller::~Poller()
 	{
 		unwatch_all();
-	}
 
-	bool Poller::watching(
-		Socket * socket) const
-	{
-		assert(socket != nullptr);
-		assert(socket->exists());
-
-		return m_sockets.find(socket->m_socket) != m_sockets.end();
+#ifdef NETLIB_EPOLL
+		if(m_poller != INVALID_POLLER)
+		{
+			::close(m_poller);
+			m_poller = INVALID_POLLER;
+		}
+#endif
 	}
 
 	bool Poller::watch(
 		Socket * const * sockets,
-		std::size_t count)
+		std::size_t count,
+		bool read,
+		bool write)
 	{
 		assert(sockets != nullptr);
 
+#ifdef NETLIB_EPOLL
+		reserve(m_event_list_size + count);
+#else
 		reserve(m_sockets.size() + count);
+#endif
 
 		for(std::size_t i = 0; i < count; i++)
-			if(!watch(sockets[i]))
+			if(!watch(sockets[i], read, write))
 				return false;
 
 		return true;
 	}
 
 	bool Poller::watch(
-		Socket * socket)
+		Socket * socket,
+		bool read,
+		bool write)
 	{
 		assert(socket != nullptr);
 		assert(socket->exists());
 
-		reserve(m_sockets.size() + 1);
-
 #ifdef NETLIB_EPOLL
+		reserve(m_event_list_size + 1);
+
 		if(m_poller == INVALID_POLLER)
 		{
 			m_poller = ::epoll_create1(0);
@@ -118,17 +127,31 @@ namespace netlib
 		}
 
 		::epoll_event event;
-		event.events = EPOLLIN;
-		event.data.fd = socket->m_socket;
+
+		event.events = 0;
+		if(read)
+			event.events |= EPOLLIN;
+		if(write)
+			event.events |= EPOLLOUT;
+
+		event.data.ptr = socket;
 
 		if(INVALID_POLLER == epoll_ctl(m_poller, EPOLL_CTL_ADD, socket->m_socket, &event))
 			return false;
 
-		m_sockets.insert(
-			std::make_pair(socket->m_socket, socket));
+		++m_event_list_size;
 #else
-		static_cast<::pollfd *>(m_poll_list)[m_sockets.size()].fd = socket->m_socket;
-		static_cast<::pollfd *>(m_poll_list)[m_sockets.size()].events = POLLIN;
+		reserve(m_sockets.size() + 1);
+
+		::pollfd & it = static_cast<::pollfd *>(m_poll_list)[m_sockets.size()];
+
+		it.fd = socket->m_socket;
+
+		it.events = 0;
+		if(read)
+			it.events |= POLLIN;
+		if(write)
+			it.events |= POLLOUT;
 
 		m_sockets.insert(
 			std::make_pair(socket->m_socket, socket));
@@ -156,14 +179,13 @@ namespace netlib
 		assert(socket->exists());
 
 #ifdef NETLIB_EPOLL
-		::epoll_event event;
-		event.events = EPOLLIN;
-		event.data.fd = socket->m_socket;
+		static ::epoll_event event;
 
 		// Return false if the socket was not watched.
 		if(-1 == epoll_ctl(m_poller, EPOLL_CTL_DEL, socket->m_socket, &event))
 			return false;
 #else
+		bool found = false;
 		std::size_t index;
 		for(index = 0; index < m_sockets.size(); index++)
 			if(static_cast<::pollfd *>(m_poll_list)[index].fd == socket->m_socket)
@@ -171,24 +193,26 @@ namespace netlib
 				std::size_t end = m_sockets.size()-1;
 				for(std::size_t i = index; i < end; i++)
 					static_cast<::pollfd *>(m_poll_list)[i] = static_cast<::pollfd *>(m_poll_list)[i+1];
+				found = true;
 				break;
 			}
 
 		// Return false if the socket was not watched.
-		if(index == m_sockets.size())
+		if(!found)
 			return false;
-#endif
+
 		m_sockets.erase(m_sockets.find(socket->m_socket));
+#endif
 
 		return true;
 	}
 
 	void Poller::unwatch_all()
 	{
-		m_sockets.clear();
 #ifdef NETLIB_EPOLL
 		if(m_poller != INVALID_POLLER)
 		{
+			m_event_list_size = 0;
 			m_event_list_capacity = 0;
 			::close(m_poller);
 			m_poller = INVALID_POLLER;
@@ -196,6 +220,7 @@ namespace netlib
 			m_event_list = nullptr;
 		}
 #else
+		m_sockets.clear();
 		if(m_poll_list)
 		{
 			m_poll_list_capacity = 0;
@@ -206,29 +231,45 @@ namespace netlib
 	}
 
 	bool Poller::poll(
-		std::vector<Socket *> &pending,
+		std::vector<PollEvent> &events,
 		std::size_t ms_timeout)
 	{
-		if(m_sockets.empty())
+#ifdef NETLIB_EPOLL
+		if(!m_event_list_size)
 			return true;
 
-#ifdef NETLIB_EPOLL
 		assert(m_poller != INVALID_POLLER);
 
 		std::size_t count = ::epoll_wait(
 			m_poller,
-			(::epoll_event *) m_event_list,
-			m_sockets.size(),
+			static_cast<::epoll_event *>(m_event_list),
+			m_event_list_size,
 			ms_timeout);
 
 		if(count == -1)
 			return false;
 
-		pending.resize(count);
+		events.reserve(count);
 
 		for(std::size_t i = 0; i < count; i++)
-			pending[i] = m_sockets[static_cast<::epoll_event *>(m_event_list)[i].data.fd];
+		{
+			::epoll_event & it = static_cast<::epoll_event *>(m_event_list)[i];
+
+			if(it.events & (EPOLLIN | EPOLLOUT | EPOLLERR))
+			{
+				PollEvent event;
+				event.socket = static_cast<Socket *>(it.data.ptr);
+				event.can_read = it.events & EPOLLIN;
+				event.can_write = it.events & EPOLLOUT;
+				event.error = it.events & EPOLLERR;
+
+				events.push_back(event);
+			}
+		}
 #else
+		if(m_sockets.empty())
+			return true;
+
 		std::size_t count = ::poll(
 			(::pollfd *) m_poll_list,
 			m_sockets.size(),
@@ -241,11 +282,21 @@ namespace netlib
 		pending.reserve(count);
 
 		for(std::size_t i = 0; count; i++)
-			if(static_cast<::pollfd *>(m_poll_list)[i].revents & POLLIN)
+		{
+			::pollfd & it = static_cast<::pollfd *>(m_poll_list)[i];
+			if(it.revents & (POLLIN | POLLOUT | POLLERR))
 			{
 				--count;
-				pending.push_back(m_sockets[static_cast<::pollfd *>(m_poll_list)[i].fd]);
+
+				PollEvent event;
+				event.socket = m_sockets[it.fd];
+				event.can_read = it.events & POLLIN;
+				event.can_write = it.events & POLLOUT;
+				event.error = it.events & POLLERR;
+
+				events.push_back(event);
 			}
+		}
 #endif
 
 		return true;
@@ -254,7 +305,6 @@ namespace netlib
 	void Poller::reserve(
 		std::size_t size)
 	{
-		m_sockets.reserve(size);
 #ifdef NETLIB_EPOLL
 		if(size <= m_event_list_capacity)
 			return;
@@ -270,6 +320,8 @@ namespace netlib
 #else
 		if(size <= m_poll_list_capacity)
 			return;
+
+		m_sockets.reserve(size);
 
 		m_poll_list = std::realloc(
 			m_poll_list,

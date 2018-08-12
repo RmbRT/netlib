@@ -1,12 +1,14 @@
 #include "Receive.hpp"
 
+#include <cassert>
+
 namespace netlib::async
 {
 	Receive::Receive(
-		x::Connection & connection,
+		StreamSocket &socket,
 		void * data,
 		std::size_t size):
-		connection(connection),
+		socket(socket),
 		data(reinterpret_cast<std::uint8_t *>(data)),
 		size(size),
 		m_error(false)
@@ -16,14 +18,17 @@ namespace netlib::async
 	CR_IMPL_BEGIN(Receive)
 		while(size)
 		{
+			// Make sure this coroutine is used as intended.
+			assert(socket.async() || socket.pending());
+
 			// Need a separate scope for the local variable.
 			{
-				std::size_t count = connection.receive_pending(data, size);
+				std::size_t count = socket.recv(data, size);
 				size -= count;
 				data += count;
 
 				if(!count
-				&& !(connection.async() && Socket::would_block()))
+				&& !(socket.async() && Socket::would_block()))
 				{
 					m_error = true;
 					break;

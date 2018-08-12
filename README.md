@@ -4,6 +4,8 @@ The netlib is an object oriented platform independend interface to the C socket 
 
 **The current version of netlib is still a work in progress, and is not tested. Most functionality regarding IPv4 should work already though.**
 
+The netlib also contains primitives for asynchronous communication, which comes in the form of an event polling interface and coroutines used for asynchronous sending and receiving.
+
 ## Cloning
 
 Navigate to the directory you want to have the `netlib` folder in. Now execute:
@@ -15,6 +17,12 @@ Navigate to the directory you want to have the `netlib` folder in. Now execute:
 Make sure you have CMake installed. Now navigate into the `netlib` directory and execute:
 
 	cmake .
+
+Or, if you wish to build into a separate directory:
+
+	mkdir build
+	cd build
+	cmake ..
 
 This generates project / make files (depending on your machine configuration). Use these to compile the library.
 It also downloads any dependencies and creates an include directory that can be used to import netlib into other projects.

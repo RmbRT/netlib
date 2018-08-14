@@ -68,13 +68,23 @@ namespace netlib
 			m_listening = false;
 		}
 
-		Connection ConnectionListener::accept()
+		StreamSocket ConnectionListener::accept()
 		{
 			StreamSocket incoming;
-			if(!static_cast<StreamSocket *>(this)->accept(incoming))
-				return Connection();
+			if(!StreamSocket::accept(incoming))
+				return StreamSocket();
 			else
-				return Connection(std::move(incoming));
+				return std::move(incoming);
+		}
+
+		StreamSocket ConnectionListener::accept(
+			async_t)
+		{
+			StreamSocket incoming;
+			if(!StreamSocket::accept(kAsync, incoming))
+				return StreamSocket();
+			else
+				return std::move(incoming);
 		}
 	}
 }

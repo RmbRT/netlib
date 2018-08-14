@@ -1,4 +1,5 @@
 #include "BufferedConnection.hpp"
+#include <cassert>
 
 namespace netlib::x
 {
@@ -8,6 +9,37 @@ namespace netlib::x
 		m_input(input_buffer),
 		m_output(output_buffer)
 	{
+	}
+
+	BufferedConnection::BufferedConnection(
+		std::size_t buffer_size):
+		m_input(buffer_size),
+		m_output(buffer_size)
+	{
+	}
+
+	BufferedConnection::BufferedConnection(
+		StreamSocket && socket,
+		std::size_t input_buffer,
+		std::size_t output_buffer):
+		StreamSocket(std::move(socket)),
+		m_input(input_buffer),
+		m_output(output_buffer)
+	{
+	}
+
+	BufferedConnection::BufferedConnection(
+		StreamSocket && socket,
+		std::size_t buffer_size):
+		StreamSocket(std::move(socket)),
+		m_input(buffer_size),
+		m_output(buffer_size)
+	{
+	}
+
+	BufferedConnection::~BufferedConnection()
+	{
+		close();
 	}
 
 	bool BufferedConnection::flush_some()
@@ -28,5 +60,43 @@ namespace netlib::x
 					m_input.end(),
 					m_input.free_space()))
 			|| (async() && Socket::would_block()));
+	}
+
+	void BufferedConnection::discard()
+	{
+		m_input.clear();
+		m_output.clear();
+	}
+
+	void BufferedConnection::close()
+	{
+		assert(m_input.empty());
+		assert(m_output.empty());
+
+		Socket::close();
+	}
+
+	bool BufferedConnection::connect(
+		SocketAddress const& address)
+	{
+		assert(!exists());
+
+		new (this) StreamSocket(
+			address.family);
+
+		return StreamSocket::connect(address);
+	}
+
+	bool BufferedConnection::connect(
+		async_t,
+		SocketAddress const& address)
+	{
+		assert(!exists());
+
+		new (this) StreamSocket(
+			kAsync,
+			address.family);
+
+		return StreamSocket::connect(address);
 	}
 }

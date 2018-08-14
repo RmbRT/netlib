@@ -111,6 +111,12 @@ namespace netlib::util
 		return size;
 	}
 
+	void Buffer::clear() noexcept
+	{
+		m_begin = 0;
+		m_size = 0;
+	}
+
 	void * Buffer::end() noexcept
 	{
 		if(wrapping())

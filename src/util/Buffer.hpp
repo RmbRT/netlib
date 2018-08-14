@@ -83,6 +83,9 @@ namespace netlib::util
 			void * data,
 			std::size_t size) noexcept;
 
+		/** Empties the buffer. */
+		void clear() noexcept;
+
 		/** The end of the buffer contents, and beginning of the free space. */
 		void * end() noexcept;
 		/** The end of the buffer contents, and beginning of the free space. */

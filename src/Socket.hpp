@@ -171,6 +171,12 @@ namespace netlib
 		bool set_async(
 			bool async);
 
+		/** Checks whether the socket had an error.
+			Internally calls `getsockopt()` with `SO_ERROR`.
+		@return
+			Whether the `SO_ERROR` is `0`. */
+		bool error();
+
 		/** Returns whether a previous operation failed due to a potential blocking. */
 		static bool would_block();
 
@@ -194,10 +200,21 @@ namespace netlib
 	class StreamSocket : public Socket
 	{
 	public:
-		/** Creates a datagram socket for the requested address family.
-			Accepts IPv4 and IPv6. */
+		/** Creates a stream socket for the requested address family.
+		@param[in] family:
+			The requested address family.
+			Must be either IPv4 and IPv6. */
 		explicit StreamSocket(
+			AddressFamily family);
+
+		/** Creates a non-blocking stream socket for the requested address family.
+		@param[in] family:
+			The requested address family.
+			Must be either IPv4 or IPv6. */
+		StreamSocket(
+			async_t,
 			AddressFamily);
+
 		StreamSocket() = default;
 		StreamSocket(StreamSocket const&) = delete;
 		StreamSocket(StreamSocket &&) = default;
@@ -233,6 +250,7 @@ namespace netlib
 			Whether a connection was established. */
 		bool connect(
 			SocketAddress const& address);
+
 		/** Tries to bind the socket to `address`.
 		@param[in] address:
 			The address to bind the socket to.
@@ -254,6 +272,16 @@ namespace netlib
 		@return
 			Whether it succeeded. */
 		bool accept(
+			StreamSocket &out);
+		/** Accepts an incoming connection.
+			This function does not block if `pending()` is `true`.
+			The resulting connection will be set to async / non-blocking mode.
+		@param[out] out:
+			The socket to hold the incoming connection.
+		@return
+			Whether it succeeded. */
+		bool accept(
+			async_t,
 			StreamSocket &out);
 	};
 

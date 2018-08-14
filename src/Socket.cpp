@@ -269,6 +269,23 @@ namespace netlib
 		return true;
 	}
 
+	bool Socket::error()
+	{
+		assert(Runtime::exists());
+		assert(exists());
+
+		socklen_t size = sizeof(int);
+		int value;
+		::getsockopt(
+			m_socket,
+			SOL_SOCKET,
+			SO_ERROR,
+			&value,
+			&size);
+
+		return value != 0;
+	}
+
 	bool Socket::would_block()
 	{
 		return errno == EWOULDBLOCK
@@ -428,6 +445,49 @@ namespace netlib
 		socket.m_protocol = m_protocol;
 		socket.m_type = m_type;
 		socket.m_socket = sockid;
+		socket.m_async = false;
+
+		return true;
+	}
+
+	bool StreamSocket::accept(
+		async_t,
+		StreamSocket &socket)
+	{
+		assert(Runtime::exists());
+		assert(exists());
+
+		sockaddr_in addr;
+		socklen_t len = sizeof(::sockaddr);
+
+#if defined(__unix__) && defined(_GNU_SOURCE)
+		int sockid = ::accept4(
+			m_socket,
+			reinterpret_cast<::sockaddr*>(&addr),
+			&len,
+			SOCK_NONBLOCK);
+#else
+		int sockid = ::accept(m_socket, reinterpret_cast<::sockaddr*>(&addr), &len);
+#endif
+		if(sockid == -1)
+			return false;
+
+		if(socket)
+			socket.close();
+
+		socket.m_address = to_socket_address(
+			reinterpret_cast<::sockaddr const&>(addr));
+
+		socket.m_protocol = m_protocol;
+		socket.m_type = m_type;
+		socket.m_socket = sockid;
+
+#if defined(__unix__) && defined(_GNU_SOURCE)
+		socket.m_async = true;
+#else
+		socket.m_async = false;
+		socket.set_async(true);
+#endif
 
 		return true;
 	}
@@ -486,11 +546,22 @@ namespace netlib
 
 		return !::listen(m_socket, SOMAXCONN);
 	}
+
 	StreamSocket::StreamSocket(
 		AddressFamily family):
 		Socket(family, SocketType::kStream)
 	{
-		assert(family == AddressFamily::kIPv4 || family == AddressFamily::kIPv6);
+		assert(family == AddressFamily::kIPv4
+			|| family == AddressFamily::kIPv6);
+	}
+
+	StreamSocket::StreamSocket(
+		async_t,
+		AddressFamily family):
+		Socket(kAsync, family, SocketType::kStream)
+	{
+		assert(family == AddressFamily::kIPv4
+			|| family == AddressFamily::kIPv6);
 	}
 
 	Socket::Socket(

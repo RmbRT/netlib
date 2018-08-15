@@ -1,7 +1,7 @@
 #ifndef __netlib_x_bufferedconnection_hpp_defined
 #define __netlib_x_bufferedconnection_hpp_defined
 
-#include "Connection.hpp"
+#include "../Socket.hpp"
 #include "../util/Buffer.hpp"
 
 #include <vector>
@@ -15,6 +15,7 @@ namespace netlib::x
 		This class is best used in async/nonblocking mode in conjunction with polling and coroutines. */
 	class BufferedConnection : protected StreamSocket
 	{
+		friend class ::netlib::Poller;
 		/** The input buffer. */
 		util::Buffer m_input;
 		/** The output buffer. */

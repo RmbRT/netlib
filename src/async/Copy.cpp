@@ -6,14 +6,13 @@
 
 namespace netlib::async
 {
-	Copy::Copy(
+	void Copy::prepare(
 		void * output,
-		std::size_t size):
-		buffer(),
-		size(0),
-		output(output),
-		to_write(size)
+		std::size_t size)
 	{
+		size = 0;
+		this->output = output;
+		to_write = size;
 	}
 	void Copy::add_data(
 		void const * buffer,

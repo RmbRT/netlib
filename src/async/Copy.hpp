@@ -13,7 +13,7 @@ namespace netlib::async
 			Where to output the data to.
 		@param[in] size:
 			How many bytes to copy. */
-		Copy(
+		void prepare(
 			void * output,
 			std::size_t size);
 
@@ -46,7 +46,7 @@ namespace netlib::async
 		void * output;
 		/** How many bytes to write. */
 		std::size_t to_write;
-	CR_EXTERNAL
+	CR_EXTERNAL()
 }
 
 #include "Copy.inl"

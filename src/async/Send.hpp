@@ -18,7 +18,7 @@ namespace netlib::async
 			The data to send.
 		@param[in] size:
 			The byte count to receive. */
-		Send(
+		void prepare(
 			StreamSocket &socket,
 			void const * data,
 			std::size_t size);
@@ -26,12 +26,13 @@ namespace netlib::async
 		/** Whether an error occurred. */
 		inline bool error() const;
 	CR_STATE
-		StreamSocket &socket;
+		StreamSocket * socket;
 		std::uint8_t const * data;
 		std::size_t size;
 
 		bool m_error;
-	CR_EXTERNAL
+	CR_EXTERNAL()
+
 
 	/** Sends data asynchronously to a buffered connection.
 		Invoke this whenever the buffered connection is able to send data. */
@@ -43,15 +44,15 @@ namespace netlib::async
 			The data to send.
 		@param[in] size:
 			The byte count to receive. */
-		BufferedSend(
+		void prepare(
 			x::BufferedConnection &connection,
 			void const * data,
 			std::size_t size);
 	CR_STATE
-		x::BufferedConnection &connection;
+		x::BufferedConnection * connection;
 		std::uint8_t const * data;
 		std::size_t size;
-	CR_EXTERNAL
+	CR_EXTERNAL()
 }
 
 #include "Send.inl"

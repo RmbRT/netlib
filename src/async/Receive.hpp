@@ -18,7 +18,7 @@ namespace netlib::async
 			The data to receive.
 		@param[in] size:
 			The byte count to receive. */
-		Receive(
+		void prepare(
 			StreamSocket &socket,
 			void * data,
 			std::size_t size);
@@ -26,12 +26,12 @@ namespace netlib::async
 		/** Whether an error occurred. */
 		inline bool error() const;
 	CR_STATE
-		StreamSocket &socket;
+		StreamSocket * socket;
 		std::uint8_t * data;
 		std::size_t size;
 
 		bool m_error;
-	CR_EXTERNAL
+	CR_EXTERNAL()
 
 	/** Receives data asynchronously from a buffered connection.
 		Invoke this whenever the buffered connection has available input. */
@@ -43,15 +43,15 @@ namespace netlib::async
 			The data to receive.
 		@param[in] size:
 			The byte count to receive. */
-		BufferedReceive(
+		void prepare(
 			x::BufferedConnection &connection,
 			void * data,
 			std::size_t size);
 	CR_STATE
-		x::BufferedConnection &connection;
+		x::BufferedConnection *connection;
 		std::uint8_t * data;
 		std::size_t size;
-	CR_EXTERNAL
+	CR_EXTERNAL()
 }
 
 #include "Receive.inl"

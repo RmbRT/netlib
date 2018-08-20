@@ -9,6 +9,7 @@
 
 #include <poll.h>
 #include <fcntl.h>
+#include <cerrno>
 
 #ifndef SOCKET_ERROR
 int const SOCKET_ERROR = -1;

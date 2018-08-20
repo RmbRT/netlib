@@ -29,6 +29,15 @@ namespace netlib::x
 		using StreamSocket::would_block;
 		using StreamSocket::error;
 
+		BufferedConnection(BufferedConnection&&) = default;
+		BufferedConnection &operator=(
+			BufferedConnection &&) = default;
+
+		static constexpr BufferedConnection * cast_from_base(
+			Socket * socket);
+		static constexpr BufferedConnection const * cast_from_base(
+			Socket const * socket);
+
 		/** Creates a closed buffered connection.
 		@param[in] family:
 			The address family to use.

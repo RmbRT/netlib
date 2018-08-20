@@ -44,22 +44,22 @@ namespace netlib::x
 
 	bool BufferedConnection::flush_some()
 	{
-		return !(m_output.empty()
+		return m_output.empty()
 			|| m_output.remove(
 				StreamSocket::send(
 					m_output.data(),
 					m_output.continuous_data()))
-			|| (async() && Socket::would_block()));
+			|| (async() && Socket::would_block());
 	}
 
 	bool BufferedConnection::receive_some()
 	{
-		return !(!m_input.full()
+		return m_input.full()
 			|| m_input.add(
 				StreamSocket::recv(
 					m_input.end(),
-					m_input.free_space()))
-			|| (async() && Socket::would_block()));
+					m_input.continuous_free_space()))
+			|| (async() && Socket::would_block());
 	}
 
 	void BufferedConnection::discard()
@@ -73,6 +73,8 @@ namespace netlib::x
 		assert(m_input.empty());
 		assert(m_output.empty());
 
+		if(exists())
+			Socket::shutdown(Shutdown::kBoth);
 		Socket::close();
 	}
 

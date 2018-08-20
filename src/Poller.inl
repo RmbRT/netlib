@@ -1,5 +1,10 @@
 namespace netlib
 {
+	bool Poller::empty() const
+	{
+		return m_watch_list.empty();
+	}
+
 	template<class T, class>
 	bool Poller::watch(
 		T * object,

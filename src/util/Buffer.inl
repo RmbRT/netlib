@@ -44,6 +44,15 @@ namespace netlib::util
 			return m_size;
 	}
 
+	std::size_t Buffer::continuous_free_space() const noexcept
+	{
+		std::size_t end = m_begin + m_size;
+		if(end >= capacity())
+			return free_space();
+		else
+			return capacity() - end;
+	}
+
 	bool Buffer::wrapping() const
 	{
 		return m_begin + m_size > capacity();

@@ -26,6 +26,8 @@ namespace netlib::util
 
 		/** How many bytes of free space are in the buffer. */
 		inline std::size_t free_space() const noexcept;
+		/** How many bytes of continuous free space are in the buffer. */
+		inline std::size_t continuous_free_space() const noexcept;
 
 		/** The buffer's contents. */
 		inline void * data() noexcept;

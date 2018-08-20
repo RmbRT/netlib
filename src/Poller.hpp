@@ -2,10 +2,12 @@
 #define __netlib_poller_hpp_defined
 
 #include "defines.hpp"
+#include "Socket.hpp"
 
 #include <unordered_map>
 #include <vector>
 #include <list>
+
 
 // `epoll` is only available on GNU/Linux.
 #ifdef __unix__
@@ -15,18 +17,18 @@
 
 namespace netlib
 {
-	class Socket;
-
 	namespace x
 	{
 		class Connection;
 		class ConnectionListener;
 	}
 
+	class Poller;
+
 	class PollListener
 	{
 	public:
-		virtual void operator()(
+		virtual bool operator()(
 			Socket * target,
 			bool can_read,
 			bool can_write,
@@ -45,7 +47,13 @@ namespace netlib
 			WatchEntry() = default;
 			WatchEntry(
 				PollListener * listener,
+				socket_t socket_handle,
 				Socket * socket);
+
+			// Hide the socket handle.
+		private:
+			friend class ::netlib::Poller;
+			socket_t socket_handle;
 		};
 	}
 
@@ -63,7 +71,7 @@ namespace netlib
 		bool error;
 
 		/** Handles the event. */
-		void operator()() const;
+		bool operator()() const;
 	};
 
 	/** Efficiently polls socket updates.
@@ -108,6 +116,8 @@ namespace netlib
 
 		/** Destroys the poller and frees its resources. */
 		~Poller();
+
+		NETLIB_INL bool empty() const;
 
 		/** Watches a single socket.
 		@param[in] socket:

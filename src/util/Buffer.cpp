@@ -61,6 +61,8 @@ namespace netlib::util
 				size);
 		}
 
+		add(size);
+
 		return size;
 	}
 

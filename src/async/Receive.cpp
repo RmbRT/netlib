@@ -9,6 +9,7 @@ namespace netlib::async
 		void * data,
 		std::size_t size)
 	{
+		Coroutine::prepare();
 		this->socket = &socket;
 		this->data = reinterpret_cast<std::uint8_t *>(data);
 		this->size = size;
@@ -46,6 +47,7 @@ namespace netlib::async
 		void * data,
 		std::size_t size)
 	{
+		Coroutine::prepare();
 		this->connection = &connection;
 		this->data = reinterpret_cast<std::uint8_t *>(data);
 		this->size = size;

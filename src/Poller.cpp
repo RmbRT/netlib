@@ -17,17 +17,19 @@ namespace netlib
 	{
 		WatchEntry::WatchEntry(
 			PollListener * listener,
+			socket_t socket_handle,
 			Socket * socket):
 			listener(listener),
+			socket_handle(socket_handle),
 			socket(socket),
 			iterator()
 		{
 		}
 	}
 
-	void PollEvent::operator()() const
+	bool PollEvent::operator()() const
 	{
-		(*entry->listener)(
+		return (*entry->listener)(
 			entry->socket,
 			can_read,
 			can_write,
@@ -103,7 +105,7 @@ namespace netlib
 		assert(socket->exists());
 
 		// Add the socket to the watch list.
-		m_watch_list.emplace_front(listener, socket);
+		m_watch_list.emplace_front(listener, socket->m_socket, socket);
 		m_watch_list.front().iterator = m_watch_list.begin();
 
 		// Make space for 1 more entry in the poll/event list.
@@ -169,14 +171,13 @@ namespace netlib
 		detail::WatchEntry const * entry)
 	{
 		assert(entry != nullptr);
-		assert(entry->socket->exists());
-
+		assert(entry->socket_handle != -1);
 #ifdef NETLIB_EPOLL
 		// Is needed because in some kernel versions, the event pointer must not be null.
 		static ::epoll_event event;
 
 		// Return false if the socket was not watched.
-		if(-1 == epoll_ctl(m_poller, EPOLL_CTL_DEL, entry->socket->m_socket, &event))
+		if(-1 == epoll_ctl(m_poller, EPOLL_CTL_DEL, entry->socket_handle, &event))
 			return false;
 
 		--m_event_list_size;
@@ -185,7 +186,7 @@ namespace netlib
 
 		// Find the poll list entry of that socket.
 		for(std::size_t index = 0; index < m_sockets.size(); index++)
-			if(static_cast<::pollfd *>(m_poll_list)[index].fd == entry->socket->m_socket)
+			if(static_cast<::pollfd *>(m_poll_list)[index].fd == entry->socket_handle)
 			{
 				// Erase the entry from the poll list.
 				std::size_t end = m_sockets.size()-1;
@@ -201,7 +202,7 @@ namespace netlib
 			return false;
 
 		// Remove the socket from the look up.
-		m_sockets.erase(m_sockets.find(entry->socket->m_socket));
+		m_sockets.erase(m_sockets.find(entry->socket_handle));
 #endif
 
 		// Remove the watch list entry.

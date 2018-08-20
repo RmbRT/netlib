@@ -26,6 +26,11 @@ namespace netlib::x
 		ConnectionListener(
 			SocketAddress const& listen_addr);
 
+		static constexpr ConnectionListener * cast_from_base(
+			Socket * base);
+		static constexpr ConnectionListener const * cast_from_base(
+			Socket const * base);
+
 		ConnectionListener(ConnectionListener &&);
 		ConnectionListener &operator=(ConnectionListener &&);
 		ConnectionListener(ConnectionListener const&) = delete;

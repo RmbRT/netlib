@@ -6,7 +6,6 @@
 #include "defines.hpp"
 #include "Protocol.hpp"
 #include "SocketAddress.hpp"
-#include "Poller.hpp"
 
 namespace netlib
 {
@@ -48,6 +47,12 @@ namespace netlib
 	/** Asynchronous symbolic constant. */
 	static struct async_t {} const kAsync;
 
+	/** Socket handle type. */
+	typedef std::uintptr_t socket_t;
+
+	// Forward declaration.
+	class Poller;
+
 	/** Basic Socket class.
 		Represents a generic Socket and contains functions that all types of Sockets have. */
 	class Socket
@@ -61,7 +66,7 @@ namespace netlib
 		/** The socket's type. */
 		SocketType m_type;
 		/** The socket handle. */
-		std::uintptr_t m_socket;
+		socket_t m_socket;
 		/** Whether the socket is in nonblocking mode. */
 		bool m_async;
 	public:

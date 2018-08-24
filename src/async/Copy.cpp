@@ -10,7 +10,7 @@ namespace netlib::async
 		void * output,
 		std::size_t size)
 	{
-		Base::prepare();
+		LibCrBase::prepare();
 		size = 0;
 		this->output = output;
 		to_write = size;
@@ -21,7 +21,7 @@ namespace netlib::async
 		std::size_t size,
 		cr::Coroutine * parent)
 	{
-		Base::prepare(parent);
+		LibCrBase::prepare(parent);
 		size = 0;
 		this->output = output;
 		to_write = size;

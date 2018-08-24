@@ -9,7 +9,7 @@ namespace netlib::async
 		void * data,
 		std::size_t size)
 	{
-		Base::prepare();
+		LibCrBase::prepare();
 		this->socket = &socket;
 		this->data = reinterpret_cast<std::uint8_t *>(data);
 		this->size = size;
@@ -22,7 +22,7 @@ namespace netlib::async
 		std::size_t size,
 		cr::Coroutine * parent)
 	{
-		Base::prepare(parent);
+		LibCrBase::prepare(parent);
 		this->socket = &socket;
 		this->data = reinterpret_cast<std::uint8_t *>(data);
 		this->size = size;
@@ -60,7 +60,7 @@ namespace netlib::async
 		void * data,
 		std::size_t size)
 	{
-		Base::prepare();
+		LibCrBase::prepare();
 		this->connection = &connection;
 		this->data = reinterpret_cast<std::uint8_t *>(data);
 		this->size = size;
@@ -72,7 +72,7 @@ namespace netlib::async
 		std::size_t size,
 		cr::Coroutine * parent)
 	{
-		Base::prepare(parent);
+		LibCrBase::prepare(parent);
 		this->connection = &connection;
 		this->data = reinterpret_cast<std::uint8_t *>(data);
 		this->size = size;

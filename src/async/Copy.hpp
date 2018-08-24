@@ -17,6 +17,18 @@ namespace netlib::async
 			void * output,
 			std::size_t size);
 
+		/** Prepares an execution instance.
+		@param[in] output:
+			Where to output the data to.
+		@param[in] size:
+			How many bytes to copy.
+		@param[in] parent:
+			The parent coroutine. */
+		void prepare(
+			void * output,
+			std::size_t size,
+			cr::Coroutine * parent);
+
 		/** Adds new data for the coroutine's next iteration.
 			This function must only be called if there is no leftover data.
 		@param[in] buffer:
@@ -46,7 +58,7 @@ namespace netlib::async
 		void * output;
 		/** How many bytes to write. */
 		std::size_t to_write;
-	CR_EXTERNAL()
+	CR_EXTERNAL
 }
 
 #include "Copy.inl"

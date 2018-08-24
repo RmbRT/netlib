@@ -8,14 +8,27 @@ namespace netlib::async
 		void const * data,
 		std::size_t size)
 	{
-		Coroutine::prepare();
+		Base::prepare();
 		this->socket = &socket;
 		this->data = reinterpret_cast<std::uint8_t const *>(data);
 		this->size = size;
 		m_error = false;
 	}
 
-	CR_IMPL_BEGIN(Send)
+	void Send::prepare(
+		StreamSocket &socket,
+		void const * data,
+		std::size_t size,
+		cr::Coroutine * parent)
+	{
+		Base::prepare(parent);
+		this->socket = &socket;
+		this->data = reinterpret_cast<std::uint8_t const *>(data);
+		this->size = size;
+		m_error = false;
+	}
+
+	CR_IMPL(Send)
 		while(size)
 		{
 			// Need a separate scope for the local variable.
@@ -43,13 +56,25 @@ namespace netlib::async
 		void const * data,
 		std::size_t size)
 	{
-		Coroutine::prepare();
+		Base::prepare();
 		this->connection = &connection;
 		this->data = reinterpret_cast<std::uint8_t const *>(data);
 		this->size = size;
 	}
 
-	CR_IMPL_BEGIN(BufferedSend)
+	void BufferedSend::prepare(
+		x::BufferedConnection &connection,
+		void const * data,
+		std::size_t size,
+		cr::Coroutine * parent)
+	{
+		Base::prepare(parent);
+		this->connection = &connection;
+		this->data = reinterpret_cast<std::uint8_t const *>(data);
+		this->size = size;
+	}
+
+	CR_IMPL(BufferedSend)
 		while(size)
 		{
 			// Make sure this coroutine is used as intended.

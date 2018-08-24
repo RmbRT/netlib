@@ -28,4 +28,5 @@ include_directories(depend/libcr/include)
 # Creates an include directory containing all header files used in the netlib.
 # Add /netlib/include/ to your include directories and access the files via #include <netlib/*>
 file(COPY "src/" DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include/netlib/ FILES_MATCHING PATTERN "*.hpp" PATTERN "*.inl")
-file(COPY "depend/libcr/include/" DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include/ FILES_MATCHING PATTERN "*.hpp" PATTERN "*.inl")
+file(COPY "depend/libcr/include/" DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include/)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include/netlib/)

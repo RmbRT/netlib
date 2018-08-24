@@ -10,10 +10,23 @@ namespace netlib::async
 		void * output,
 		std::size_t size)
 	{
+		Base::prepare();
 		size = 0;
 		this->output = output;
 		to_write = size;
 	}
+
+	void Copy::prepare(
+		void * output,
+		std::size_t size,
+		cr::Coroutine * parent)
+	{
+		Base::prepare(parent);
+		size = 0;
+		this->output = output;
+		to_write = size;
+	}
+
 	void Copy::add_data(
 		void const * buffer,
 		std::size_t size)
@@ -24,7 +37,7 @@ namespace netlib::async
 		this->size = size;
 	}
 
-	CR_IMPL_BEGIN(Copy)
+	CR_IMPL(Copy)
 		for(;;)
 		{
 			if(size >= to_write)
@@ -43,5 +56,5 @@ namespace netlib::async
 				CR_YIELD;
 			}
 		}
-	CR_IMPL_END_NORETURN
+	CR_IMPL_END
 }

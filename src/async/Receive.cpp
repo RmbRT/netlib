@@ -9,14 +9,27 @@ namespace netlib::async
 		void * data,
 		std::size_t size)
 	{
-		Coroutine::prepare();
+		Base::prepare();
 		this->socket = &socket;
 		this->data = reinterpret_cast<std::uint8_t *>(data);
 		this->size = size;
 		m_error = false;
 	}
 
-	CR_IMPL_BEGIN(Receive)
+	void Receive::prepare(
+		StreamSocket &socket,
+		void * data,
+		std::size_t size,
+		cr::Coroutine * parent)
+	{
+		Base::prepare(parent);
+		this->socket = &socket;
+		this->data = reinterpret_cast<std::uint8_t *>(data);
+		this->size = size;
+		m_error = false;
+	}
+
+	CR_IMPL(Receive)
 		while(size)
 		{
 			// Make sure this coroutine is used as intended.
@@ -47,13 +60,25 @@ namespace netlib::async
 		void * data,
 		std::size_t size)
 	{
-		Coroutine::prepare();
+		Base::prepare();
 		this->connection = &connection;
 		this->data = reinterpret_cast<std::uint8_t *>(data);
 		this->size = size;
 	}
 
-	CR_IMPL_BEGIN(BufferedReceive)
+	void BufferedReceive::prepare(
+		x::BufferedConnection &connection,
+		void * data,
+		std::size_t size,
+		cr::Coroutine * parent)
+	{
+		Base::prepare(parent);
+		this->connection = &connection;
+		this->data = reinterpret_cast<std::uint8_t *>(data);
+		this->size = size;
+	}
+
+	CR_IMPL(BufferedReceive)
 		while(size)
 		{
 			// Make sure this coroutine is used as intended.

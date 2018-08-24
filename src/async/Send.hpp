@@ -17,11 +17,26 @@ namespace netlib::async
 		@param[in] data:
 			The data to send.
 		@param[in] size:
-			The byte count to receive. */
+			The byte count to send. */
 		void prepare(
 			StreamSocket &socket,
 			void const * data,
 			std::size_t size);
+
+		/** Initialises the coroutine.
+		@param[in] socket:
+			The socket to send data with.
+		@param[in] data:
+			The data to send.
+		@param[in] size:
+			The byte count to send.
+		@param[in] parent:
+			The parent coroutine. */
+		void prepare(
+			StreamSocket &socket,
+			void const * data,
+			std::size_t size,
+			cr::Coroutine * parent);
 
 		/** Whether an error occurred. */
 		inline bool error() const;
@@ -31,7 +46,7 @@ namespace netlib::async
 		std::size_t size;
 
 		bool m_error;
-	CR_EXTERNAL()
+	CR_EXTERNAL
 
 
 	/** Sends data asynchronously to a buffered connection.
@@ -43,16 +58,31 @@ namespace netlib::async
 		@param[in] data:
 			The data to send.
 		@param[in] size:
-			The byte count to receive. */
+			The byte count to send. */
 		void prepare(
 			x::BufferedConnection &connection,
 			void const * data,
 			std::size_t size);
+
+		/** Initialises the coroutine.
+		@param[in] connection:
+			The connection to send data with.
+		@param[in] data:
+			The data to send.
+		@param[in] size:
+			The byte count to send.
+		@param[in] parent:
+			The parent coroutine. */
+		void prepare(
+			x::BufferedConnection &connection,
+			void const * data,
+			std::size_t size,
+			cr::Coroutine * parent);
 	CR_STATE
 		x::BufferedConnection * connection;
 		std::uint8_t const * data;
 		std::size_t size;
-	CR_EXTERNAL()
+	CR_EXTERNAL
 }
 
 #include "Send.inl"

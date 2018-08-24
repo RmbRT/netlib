@@ -23,6 +23,21 @@ namespace netlib::async
 			void * data,
 			std::size_t size);
 
+		/** Initialises the coroutine.
+		@param[in] socket:
+			The socket to receive data with.
+		@param[in] data:
+			The data to receive.
+		@param[in] size:
+			The byte count to receive.
+		@param[in] parent:
+			The parent coroutine. */
+		void prepare(
+			StreamSocket &socket,
+			void * data,
+			std::size_t size,
+			cr::Coroutine * parent);
+
 		/** Whether an error occurred. */
 		inline bool error() const;
 	CR_STATE
@@ -31,7 +46,7 @@ namespace netlib::async
 		std::size_t size;
 
 		bool m_error;
-	CR_EXTERNAL()
+	CR_EXTERNAL
 
 	/** Receives data asynchronously from a buffered connection.
 		Invoke this whenever the buffered connection has available input. */
@@ -47,11 +62,26 @@ namespace netlib::async
 			x::BufferedConnection &connection,
 			void * data,
 			std::size_t size);
+
+		/** Initialises the coroutine.
+		@param[in] socket:
+			The socket to receive data with.
+		@param[in] data:
+			The data to receive.
+		@param[in] size:
+			The byte count to receive.
+		@param[in] parent:
+			The parent coroutine. */
+		void prepare(
+			x::BufferedConnection &connection,
+			void * data,
+			std::size_t size,
+			cr::Coroutine * parent);
 	CR_STATE
 		x::BufferedConnection *connection;
 		std::uint8_t * data;
 		std::size_t size;
-	CR_EXTERNAL()
+	CR_EXTERNAL
 }
 
 #include "Receive.inl"

@@ -73,6 +73,9 @@ namespace netlib::async
 
 	template<class ConditionVariable>
 	CR_IMPL(BufferedSend<ConditionVariable>)
+		if(size && connection->output().full())
+			CR_AWAIT(cv->wait());
+
 		while(size)
 		{
 			// Make sure this coroutine is used as intended.

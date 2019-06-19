@@ -2,25 +2,6 @@
 namespace netlib::async
 {
 	template<class ConditionVariable>
-	bool Receive<ConditionVariable>::error() const
-	{
-		return m_error;
-	}
-
-	template<class ConditionVariable>
-	void Receive<ConditionVariable>::cr_prepare(
-		StreamSocket &socket,
-		cr::util::add_cv_pod_t<ConditionVariable> &watch,
-		void * data,
-		std::size_t size)
-	{
-		this->socket = &socket;
-		this->data = reinterpret_cast<std::uint8_t *>(data);
-		this->size = size;
-		this->m_error = false;
-	}
-
-	template<class ConditionVariable>
 	CR_IMPL(Receive<ConditionVariable>)
 		if(size
 		&& (socket->async() || !socket->pending()))
@@ -35,13 +16,12 @@ namespace netlib::async
 			{
 				std::size_t count = socket->recv(data, size);
 				size -= count;
-				data += count;
+				reinterpret_cast<std::uint8_t const *&>(data) += count;
 
 				if(!count
 				&& !(socket->async() && Socket::would_block()))
 				{
-					m_error = true;
-					break;
+					CR_THROW;
 				}
 			}
 
@@ -50,19 +30,6 @@ namespace netlib::async
 				CR_AWAIT(cv->wait());
 		}
 	CR_IMPL_END
-
-	template<class ConditionVariable>
-	void BufferedReceive<ConditionVariable>::cr_prepare(
-		x::BufferedConnection &connection,
-		cr::util::add_cv_pod_t<ConditionVariable> &watch,
-		void * data,
-		std::size_t size)
-	{
-		this->cv = &watch;
-		this->connection = &connection;
-		this->data = reinterpret_cast<std::uint8_t *>(data);
-		this->size = size;
-	}
 
 	template<class ConditionVariable>
 	template<class CondVar, class>
@@ -93,7 +60,7 @@ namespace netlib::async
 			{
 				std::size_t count = connection->receive(data, size);
 				size -= count;
-				data += count;
+				reinterpret_cast<std::uint8_t *&>(data) += count;
 			}
 
 			// Only yield if there is still more data to come.

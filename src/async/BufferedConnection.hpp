@@ -31,6 +31,7 @@ namespace netlib::async
 		friend class netlib::async::BufferedReceive<cr::util::add_cv_pod_t<ConditionVariable>>;
 		friend class netlib::async::BufferedReceive<cr::util::remove_cv_pod_t<ConditionVariable>>;
 	public:
+		using x::BufferedConnection::BufferedConnection;
 
 		/** Handles all events with regard to the connection. */
 		class PollListener : netlib::PollListener

@@ -27,6 +27,8 @@ namespace netlib::async
 
 		if(error)
 		{
+			connection->m_can_send.fail_all();
+			connection->m_can_receive.fail_all();
 		}
 	}
 }

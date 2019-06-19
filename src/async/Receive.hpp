@@ -15,56 +15,24 @@ namespace netlib::async
 	/** Receives data asynchronously.
 		Invoke this whenever the socket is able to receive data. */
 	TEMPLATE_COROUTINE(Receive, (ConditionVariable), void)
-		/** Whether an error occurred. */
-		inline bool error() const;
-	CR_STATE
-		ConditionVariable * cv;
-		StreamSocket * socket;
-		std::uint8_t * data;
-		std::size_t size;
+	CR_STATE(
+		(StreamSocket &) socket,
+		(ConditionVariable &) cv,
+		(void *) data,
+		(std::size_t) size)
 
-		bool m_error;
-
-		/** Initialises the coroutine.
-		@param[in] socket:
-			The socket to receive data with.
-		@param[in] cv:
-			The condition variable that signals when data is available.
-		@param[in] data:
-			The data to receive.
-		@param[in] size:
-			The byte count to receive. */
-		void cr_prepare(
-			StreamSocket &socket,
-			cr::util::add_cv_pod_t<ConditionVariable> &cv,
-			void * data,
-			std::size_t size);
+		void cr_destroy() {}
 	CR_EXTERNAL
 
 	template<class ConditionVariable = cr::mt::ConditionVariable>
 	/** Receives data asynchronously from a buffered connection.
 		Invoke this whenever the buffered connection has available input. */
 	TEMPLATE_COROUTINE(BufferedReceive, (ConditionVariable), void)
-	CR_STATE
-		cr::util::add_cv_pod_t<ConditionVariable> * cv;
-		x::BufferedConnection * connection;
-		std::uint8_t * data;
-		std::size_t size;
-
-		/** Initialises the coroutine.
-		@param[in] connection:
-			The buffered connection to receive data with.
-		@param[in] cv:
-			The condition variable that signals when data is available.
-		@param[in] data:
-			The data to receive.
-		@param[in] size:
-			The byte count to receive. */
-		void cr_prepare(
-			x::BufferedConnection &connection,
-			cr::util::add_cv_pod_t<ConditionVariable> &cv,
-			void * data,
-			std::size_t size);
+	CR_STATE(
+		(x::BufferedConnection &) connection,
+		(cr::util::add_cv_pod_t<ConditionVariable> &) cv,
+		(void *) data,
+		(std::size_t) size)
 
 		template<
 			class CondVar,
@@ -88,6 +56,8 @@ namespace netlib::async
 			async::BufferedConnection<CondVar> &connection,
 			void * data,
 			std::size_t size);
+
+		void cr_destroy() {}
 	CR_EXTERNAL
 }
 

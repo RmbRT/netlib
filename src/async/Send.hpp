@@ -14,30 +14,13 @@ namespace netlib::async
 	/** Sends data asynchronously.
 		Invoke this whenever the socket is able to send data. */
 	TEMPLATE_COROUTINE(Send, (ConditionVariable), void)
-		/** Whether an error occurred. */
-		inline bool error() const;
-	CR_STATE
-		StreamSocket * socket;
-		cr::util::add_cv_pod_t<ConditionVariable> * cv;
-		std::uint8_t const * data;
-		std::size_t size;
+	CR_STATE(
+		(StreamSocket &) socket,
+		(cr::util::add_cv_pod_t<ConditionVariable> &) cv,
+		(void const *) data,
+		(std::size_t) size)
 
-		bool m_error;
-
-		/** Initialises the coroutine.
-		@param[in] socket:
-			The socket to send data with.
-		@param[in] cv:
-			The condition variable that signals when data can be sent.
-		@param[in] data:
-			The data to send.
-		@param[in] size:
-			The byte count to send. */
-		void cr_prepare(
-			StreamSocket &socket,
-			cr::util::add_cv_pod_t<ConditionVariable> &cv,
-			void const * data,
-			std::size_t size);
+		void cr_destroy() {}
 	CR_EXTERNAL
 
 
@@ -45,25 +28,11 @@ namespace netlib::async
 	/** Sends data asynchronously to a buffered connection.
 		Invoke this whenever the buffered connection is able to send data. */
 	TEMPLATE_COROUTINE(BufferedSend, (ConditionVariable), void)
-	CR_STATE
-		cr::util::add_cv_pod_t<ConditionVariable> * cv;
-		x::BufferedConnection * connection;
-		std::uint8_t const * data;
-		std::size_t size;
-		/** Initialises the coroutine.
-		@param[in] connection:
-			The connection to send data with.
-		@param[in] cv:
-			The condition variable that signals when data can be sent.
-		@param[in] data:
-			The data to send.
-		@param[in] size:
-			The byte count to send. */
-		void cr_prepare(
-			x::BufferedConnection &connection,
-			cr::util::add_cv_pod_t<ConditionVariable> &cv,
-			void const * data,
-			std::size_t size);
+	CR_STATE(
+		(cr::util::add_cv_pod_t<ConditionVariable> &) cv,
+		(x::BufferedConnection &) connection,
+		(void const *) data,
+		(std::size_t) size)
 
 		template<
 			class CondVar,
@@ -87,6 +56,8 @@ namespace netlib::async
 			async::BufferedConnection<CondVar> &connection,
 			void const * data,
 			std::size_t size);
+
+		void cr_destroy() {}
 	CR_EXTERNAL
 }
 

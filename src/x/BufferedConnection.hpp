@@ -4,6 +4,8 @@
 #include "../Socket.hpp"
 #include "../util/Buffer.hpp"
 
+#include <libcr/primitives.hpp>
+
 #include <vector>
 #include <cinttypes>
 
@@ -24,10 +26,6 @@ namespace netlib::x
 		using StreamSocket::operator bool;
 		using StreamSocket::exists;
 		using StreamSocket::connect;
-		using StreamSocket::async;
-		using StreamSocket::set_async;
-		using StreamSocket::would_block;
-		using StreamSocket::error;
 
 		BufferedConnection(BufferedConnection&&) = default;
 		BufferedConnection &operator=(
@@ -95,49 +93,38 @@ namespace netlib::x
 		/** Discards all buffered input and output. */
 		void discard();
 
-		/** Puts data into the send buffer.
-		@param[in] data:
-			The data to send.
-		@param[in] size:
-			The size of the data.
-		@return
-			How many bytes were actually buffered. */
-		inline std::size_t send(
-			void const * data,
-			std::size_t size);
+		/** Flushes all buffered data to be sent. */
+		COROUTINE(Flush, void)
+		CR_STATE(
+			(BufferedConnection *) conn)
+		CR_EXTERNAL
 
-		/** Receives data from the input buffer.
-		@param[out] data:
-			The data to receive.
-		@param[in] size:
-			How many bytes to receive.
-		@return
-			How many bytes were actually received. */
-		inline std::size_t receive(
-			void * data,
-			std::size_t size);
+		/** Buffers, and potentially flushes, data to be sent. */
+		COROUTINE(Send, void)
+		CR_STATE(
+			(BufferedConnection *) conn,
+			(void const *) data,
+			(std::size_t) size)
+		CR_EXTERNAL
+
+		/** Receives and buffers data. */
+		COROUTINE(Receive, void)
+		CR_STATE(
+			(BufferedConnection *) conn,
+			(void *) data,
+			(std::size_t) size)
+		CR_EXTERNAL
 
 		/** Closes the connection.
 			This must only be called if there is no buffered input or output. */
 		void close();
 
-		/** Creates the socket and connects to the specified address.
-		@param[in] address:
-			The address to connect to.
-		@return
-			Whether the connection succeeded. */
-		bool connect(
-			SocketAddress const& address);
-
-		/** Creates the connection and connects to the specified address.
-			Creates the socket in async mode.
-		@param[in] address:
-			The address to connect to.
-		@return
-			Whether the connection succeeded. */
-		bool connect(
-			async_t,
-			SocketAddress const& address);
+		/** Connects to the desired address. */
+		COROUTINE(Connect, void)
+		CR_STATE(
+			(BufferedConnection *) conn,
+			(SocketAddress const&) address)
+		CR_EXTERNAL
 	};
 }
 

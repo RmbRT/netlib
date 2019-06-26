@@ -3,9 +3,10 @@
 #ifndef __netlib_x_connectionlistener_hpp_defined
 #define __netlib_x_connectionlistener_hpp_defined
 
-#include "Connection.hpp"
 #include "../Socket.hpp"
 #include "../defines.hpp"
+
+#include <libcr/primitives.hpp>
 
 namespace netlib::x
 {
@@ -54,24 +55,14 @@ namespace netlib::x
 		/** Stops listening for incoming connections. */
 		void unlisten();
 
-		/** Checks whether any incoming connections are waiting to be processed.
-			Prerequesite is that the listener must be listening. If this function returns true, it is guaranteed that accept() will not block.
-		@return
-			Whether any incoming connections are pending. */
-		using netlib::StreamSocket::pending;
 
 		/** Accepts an incoming connection.
-			Prerequesite is that the listener must be listening.
-		@return
-			The incoming connection. If a problem occurred, the connection is closed. */
-		StreamSocket accept();
-
-		/** Accepts an incoming connection.
-			Prerequesite is that the listener must be listening. The incoming connection will be set to async / non-blocking mode. */
-		StreamSocket accept(
-			async_t);
-
-		using StreamSocket::accept;
+			Prerequesite is that the listener must be listening. */
+		COROUTINE(Accept, void)
+		CR_STATE(
+			(ConnectionListener *) listener,
+			(StreamSocket &) out)
+		CR_EXTERNAL
 
 		/** Returns the address this connection points to. */
 		using netlib::StreamSocket::address;

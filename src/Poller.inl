@@ -8,13 +8,11 @@ namespace netlib
 	template<class T, class>
 	bool Poller::watch(
 		T * object,
-		PollListener * listener,
 		bool read,
 		bool write)
 	{
 		return watch(
 			static_cast<Socket *>(object),
-			listener,
 			read,
 			write);
 	}

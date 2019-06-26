@@ -7,11 +7,10 @@
 #include "Protocol.hpp"
 #include "SocketAddress.hpp"
 
+#include <libcr/mt/ConditionVariable.hpp>
+
 namespace netlib
 {
-
-	class Socket;
-
 	/** The type / usage of a socket. */
 	enum class SocketType
 	{
@@ -27,12 +26,6 @@ namespace netlib
 		NETLIB_LAST(kSPS), kSequencedPacketStream = kSPS
 	};
 
-#ifdef NETLIB_BUILD
-	/** Converts a socket type to its corresponding native socket api constant. */
-	int to_native_api(
-		SocketType type);
-#endif
-
 	/** Constants used for the Socket::shutdown command. */
 	enum class Shutdown
 	{
@@ -44,20 +37,34 @@ namespace netlib
 		kBoth
 	};
 
-	/** Asynchronous symbolic constant. */
-	static struct async_t {} const kAsync;
-
-	/** Socket handle type. */
-	typedef std::uintptr_t socket_t;
+	/** Error values. */
+	enum class Status
+	{
+		/** Operation was successful. */
+		kSuccess,
+		/** Operation would block. */
+		kNotReady,
+		/** Operation is in progress. */
+		kInProgress,
+		/** Real error occurred. */
+		kError
+	};
 
 	// Forward declaration.
 	class Poller;
+	class PollEvent;
+
+	namespace detail
+	{
+		typedef int socket_t;
+	}
 
 	/** Basic Socket class.
 		Represents a generic Socket and contains functions that all types of Sockets have. */
 	class Socket
 	{
 		friend class ::netlib::Poller;
+		friend struct ::netlib::PollEvent;
 	protected:
 		/** The socket address. */
 		SocketAddress m_address;
@@ -66,9 +73,11 @@ namespace netlib
 		/** The socket's type. */
 		SocketType m_type;
 		/** The socket handle. */
-		socket_t m_socket;
-		/** Whether the socket is in nonblocking mode. */
-		bool m_async;
+		detail::socket_t m_socket;
+		/** Notified when input is pending. */
+		cr::mt::ConditionVariable m_input;
+		/** Notified when output is possible. */
+		cr::mt::ConditionVariable m_output;
 	public:
 		/** Creates an empty socket. */
 		Socket();
@@ -84,19 +93,6 @@ namespace netlib
 			SocketType type,
 			Protocol protocol = Protocol::kDefault);
 
-		/** Creates and allocates an asynchronous socket of the given characteristics.
-		@param[in] family:
-			The address family of the socket.
-		@param[in] type:
-			The type of the socket.
-		@param[in] protocol:
-			The socket's protocol. */
-		Socket(
-			async_t,
-			AddressFamily family,
-			SocketType type,
-			Protocol protocol = Protocol::kDefault);
-
 		/** Creates and allocates a socket of the given characteristics.
 			Does not connect to the given address, but saves it.
 		@param[in] address:
@@ -106,20 +102,6 @@ namespace netlib
 		@param[in] protocol:
 			The socket's protocol. */
 		Socket(
-			SocketAddress const& address,
-			SocketType type,
-			Protocol protocol = Protocol::kDefault);
-
-		/** Creates and allocates an asynchrounous socket of the given characteristics.
-			Does not connect to the given address, but saves it.
-		@param[in] address:
-			Indicates the address family used by the socket.
-		@param[in] type:
-			The socket's type.
-		@param[in] protocol:
-			The socket's protocol. */
-		Socket(
-			async_t,
 			SocketAddress const& address,
 			SocketType type,
 			Protocol protocol = Protocol::kDefault);
@@ -135,58 +117,97 @@ namespace netlib
 		Socket(Socket &&);
 		Socket &operator=(Socket &&);
 
-		/** recv, recvfrom or accept will not block if this returns true.
-			Waits until input is pending, or until the timeout.
-		@param[in] ns_timeout:
-			The timeout, in nanoseconds.
-		@return
-			Whether there was some pending input within the timeout. */
-		bool pending(
-			std::size_t ns_timeout = 0);
-
-		/** Waits for input on at least one of the supplied sockets, or until the timeout.
-		@param[in] sockets:
-			The sockets to check for.
-		@param[out] pending:
-			Whether there is input pending on a socket.
-			If there is pending input, then recv, recvfrom and accept will not block.
-		@param[in] count:
-			The amount of sockets supplied.
-		@param[in] ns_timeout:
-			The timeout, in manooseconds. */
-		static void pending(
-			Socket const * const * sockets,
-			bool * pending,
-			std::size_t count,
-			std::size_t ns_timeout = 0);
-
 		/** Closes the socket. */
 		void close();
+
+		/** Tries to bind the socket to `address`.
+		@param[in] address:
+			The address to bind the socket to.
+		@param[in] reuse_address:
+			Whether to attempt to reuse the address.
+		@return
+			Whether the socket could be bound to `address`. */
+		bool bind(
+			SocketAddress const& address,
+			bool reuse_address = false);
+
+		/** Tries to connect to `address`.
+			On datagram-based sockets, sets `address` as the default recipient and sender for `recv()` and `send()`.
+		@param[in] address:
+			The address to connect to.
+		@return
+			Whether the operation succeeded. */
+		Status connect(
+			SocketAddress const& address);
+
 		/** Shuts down the socket.
 		@param[in] what:
 			What aspect to shutdown.
 		@return
-			Whether it succeeded. */
-		bool shutdown(
+			Whether the operation succeeded. */
+		Status shutdown(
 			Shutdown what);
 
-		/** Sets the Socket's operating mode.
-		@param[in] async:
-			Whether to set the socket to asynchronous. */
-		bool set_async(
-			bool async);
-
-		/** Checks whether the socket had an error.
-			Internally calls `getsockopt()` with `SO_ERROR`.
+		/** Sends at most `size` bytes of `data`.
+		@param[in] data:
+			The data to send.
+		@param[in] size:
+			How many bytes to send at most.
+		@param[out] sent:
+			On success, the number of bytes sent.
 		@return
-			Whether the `SO_ERROR` is `0`. */
-		bool error();
+			Whether the operation succeeded. */
+		Status send(
+			void const* data,
+			std::size_t size,
+			std::size_t &sent);
+		/** Receives at most `size` bytes into `data`.
+		@param[out] data:
+			Where to receive the incoming data into.
+		@param[in] size:
+			How many bytes to receive at most.
+		@param[out] received:
+			On success, the number of bytes received.
+		@return
+			Whether the operation succeeded. */
+		Status recv(
+			void * data,
+			std::size_t size,
+			std::size_t &received);
 
-		/** Returns whether a previous operation failed due to a potential blocking. */
-		static bool would_block();
+		/** Sends at most `size` bytes of `data` to the given address.
+		@param[in] data:
+			The data to send.
+		@param[in] size:
+			How many bytes to send.
+		@param[in] to:
+			The address to send the data to.
+		@param[out] sent:
+			On success, the number of bytes sent.
+		@return
+			Whether the operation succeeded. */
+		Status sendto(
+			void const * data,
+			std::size_t size,
+			SocketAddress const& to,
+			std::size_t &sent);
 
-		/** Whether this Socket is in asynchronous mode. */
-		NETLIB_INL bool async() const;
+		/** Receives at most `size` bytes into `data` from the given address.
+		@param[out] data:
+			Where to receive the incoming data into.
+		@param[in] size:
+			How many bytes to receive at most.
+		@param[out] from:
+			On success, where the data was received from.
+		@param[out] received:
+			On success, the number of bytes received.
+		@return
+			Whether the operation succeeded. */
+		Status recvfrom(
+			void * data,
+			std::size_t size,
+			SocketAddress &from,
+			std::size_t &received);
 
 		/** Whether this Socket exists. */
 		NETLIB_INL bool exists() const;
@@ -212,14 +233,6 @@ namespace netlib
 		explicit StreamSocket(
 			AddressFamily family);
 
-		/** Creates a non-blocking stream socket for the requested address family.
-		@param[in] family:
-			The requested address family.
-			Must be either IPv4 or IPv6. */
-		StreamSocket(
-			async_t,
-			AddressFamily);
-
 		StreamSocket() = default;
 		StreamSocket(StreamSocket const&) = delete;
 		StreamSocket(StreamSocket &&) = default;
@@ -227,66 +240,16 @@ namespace netlib
 		StreamSocket &operator=(StreamSocket const&) = delete;
 		StreamSocket &operator=(StreamSocket &&) = default;
 
-		/** Sends at most `size` bytes of `data`.
-		@param[in] data:
-			The data to send.
-		@param[in] size:
-			How many bytes to send at most.
-		@return
-			The number of bytes sent, or 0 on error. */
-		std::size_t send(
-			void const* data,
-			std::size_t size);
-		/** Receives at most `size` bytes into `data`.
-		@param[out] data:
-			Where to receive the incoming data into.
-		@param[in] size:
-			How many bytes to receive at most.
-		@return
-			The number of bytes received, or 0 on error. */
-		std::size_t recv(
-			void * data,
-			std::size_t size);
-
-		/** Tries to connect to `address`.
-		@param[in] address:
-			The address to connect to.
-		@return
-			Whether a connection was established. */
-		bool connect(
-			SocketAddress const& address);
-
-		/** Tries to bind the socket to `address`.
-		@param[in] address:
-			The address to bind the socket to.
-		@param[in] reuse_address:
-			Whether to attempt to reuse the address.
-		@return
-			Whether the socket could be bound to `address`. */
-		bool bind(
-			SocketAddress const& address,
-			bool reuse_address = false);
 		/** Listens on the currently bound address.
 		@return
 			Whether it succeeded. */
 		bool listen();
 		/** Accepts an incoming connection.
-			This function does not block if `pending()` is `true`.
 		@param[out] out:
 			The socket to hold the incoming connection.
 		@return
-			Whether it succeeded. */
-		bool accept(
-			StreamSocket &out);
-		/** Accepts an incoming connection.
-			This function does not block if `pending()` is `true`.
-			The resulting connection will be set to async / non-blocking mode.
-		@param[out] out:
-			The socket to hold the incoming connection.
-		@return
-			Whether it succeeded. */
-		bool accept(
-			async_t,
+			Whether the operation succeeded. */
+		Status accept(
 			StreamSocket &out);
 	};
 
@@ -302,40 +265,6 @@ namespace netlib
 
 		DatagramSocket &operator=(DatagramSocket const&) = delete;
 		DatagramSocket(DatagramSocket const&) = delete;
-
-		/** Sends at most `size` bytes of `data` to the given address.
-		@param[in] data:
-			The data to send.
-		@param[in] size:
-			How many bytes to send.
-		@param[in] to:
-			The address to send the data to.
-		@param[in] flags:
-			Constant out of a socket api header. Since the set of options is not uniformly implemented across platforms, implementation-specific values have to be put manually.
-		@return
-			The number of bytes received, or 0 on error. */
-		std::size_t sendto(
-			void const * data,
-			std::size_t size,
-			SocketAddress const& to,
-			std::size_t flags = 0);
-
-		/** Receives at most `size` bytes into `data` from the given address.
-		@param[in] data:
-			Where to receive the incoming data into.
-		@param[in] size:
-			How many bytes to receive at most.
-		@param[in] to:
-			The address to send the data to.
-		@param[in] flags:
-			Constant out of a socket api header. Since the set of options is not uniformly implemented across platforms, implementation-specific values have to be put manually.
-		@return
-			The number of bytes received, or 0 on error. */
-		std::size_t recvfrom(
-			void * data,
-			std::size_t size,
-			SocketAddress const& from,
-			std::size_t flags = 0);
 	};
 }
 

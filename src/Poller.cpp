@@ -16,10 +16,8 @@ namespace netlib
 	namespace detail
 	{
 		WatchEntry::WatchEntry(
-			PollListener * listener,
 			socket_t socket_handle,
 			Socket * socket):
-			listener(listener),
 			socket_handle(socket_handle),
 			socket(socket),
 			iterator()
@@ -29,11 +27,16 @@ namespace netlib
 
 	bool PollEvent::operator()() const
 	{
-		return (*entry->listener)(
-			entry->socket,
-			can_read,
-			can_write,
-			error);
+		if(can_read)
+			entry->socket->m_input.notify_one();
+		if(can_write)
+			entry->socket->m_output.notify_one();
+
+		if(error)
+		{
+			entry->socket->m_input.fail_one();
+			entry->socket->m_output.fail_one();
+		}
 	}
 
 	Poller::Poller():
@@ -97,7 +100,6 @@ namespace netlib
 
 	detail::WatchEntry const * Poller::watch(
 		Socket * socket,
-		PollListener * listener,
 		bool read,
 		bool write)
 	{
@@ -105,7 +107,7 @@ namespace netlib
 		assert(socket->exists());
 
 		// Add the socket to the watch list.
-		m_watch_list.emplace_front(listener, socket->m_socket, socket);
+		m_watch_list.emplace_front(socket->m_socket, socket);
 		m_watch_list.front().iterator = m_watch_list.begin();
 
 		// Make space for 1 more entry in the poll/event list.

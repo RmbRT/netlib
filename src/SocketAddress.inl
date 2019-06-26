@@ -69,18 +69,15 @@ namespace netlib
 
 	constexpr bool IPv6Address::operator==(IPv6Address const& other) const
 	{
-		return !((reinterpret_cast<std::uint64_t const&>(*this)
-			^ reinterpret_cast<std::uint64_t const&>(other))
-			| (reinterpret_cast<std::uint64_t const&>(*(this+1))
-			^ reinterpret_cast<std::uint64_t const&>(*(&other+1))));
+		return !operator!=(other);
 	}
 
 	constexpr bool IPv6Address::operator!=(IPv6Address const& other) const
 	{
-		return (reinterpret_cast<std::uint64_t const&>(*this)
-			^ reinterpret_cast<std::uint64_t const&>(other))
-			| (reinterpret_cast<std::uint64_t const&>(*(this+1))
-			^ reinterpret_cast<std::uint64_t const&>(*(&other+1)));
+		return ((reinterpret_cast<std::uint64_t const *>(this)[0]
+				^ reinterpret_cast<std::uint64_t const *>(&other)[0])
+			| (reinterpret_cast<std::uint64_t const *>(this)[1]
+				^ reinterpret_cast<std::uint64_t const *>(&other)[1]));
 	}
 }
 

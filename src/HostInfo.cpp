@@ -1,6 +1,6 @@
 #include "HostInfo.hpp"
 #include "internal/platform.hpp"
-#include "internal/to_socket_address.hpp"
+#include "internal/SocketAddress.hpp"
 #include "Runtime.hpp"
 
 #include <cassert>
@@ -34,10 +34,10 @@ namespace netlib
 			assert(it->ai_addr != nullptr);
 
 			AddressInfo ai;
-			ai.address = to_socket_address(*it->ai_addr);
+			to_socket_address(*it->ai_addr, ai.address);
 			if(it->ai_canonname)
 				ai.name = it->ai_canonname;
-			ret.push_back(ai);
+			ret.push_back(std::move(ai));
 		};
 
 		::freeaddrinfo(info);

@@ -126,14 +126,16 @@ namespace netlib
 			if(!last_colon || last_colon == l-1)
 				return false;
 
+			port_t port = atoi(&str[last_colon+1]);
+			if(port & ~0xffff != 0)
+				return false;
 
+			_str[last_colon] = '\0';
 
-			std::vector<AddressInfo> info = resolve_name(_str.substr(0, last_colon).c_str());
+			std::vector<AddressInfo> info = resolve_name(_str.c_str());
 
 			if(!info.empty())
 			{
-
-				port_t port = atoi(&str[last_colon+1]);
 				out = info.front().address;
 				switch(out.family)
 				{

@@ -25,28 +25,15 @@ namespace netlib
 
 	class Poller;
 
-	class PollListener
-	{
-	public:
-		virtual bool operator()(
-			Socket * target,
-			bool can_read,
-			bool can_write,
-			bool error) const = 0;
-	};
-
-
 	namespace detail
 	{
 		struct WatchEntry
 		{
-			PollListener * listener;
 			Socket * socket;
 			std::list<WatchEntry>::iterator iterator;
 
 			WatchEntry() = default;
 			WatchEntry(
-				PollListener * listener,
 				socket_t socket_handle,
 				Socket * socket);
 
@@ -86,6 +73,7 @@ namespace netlib
 		void * m_event_list;
 		/** The list capacity. */
 		std::size_t m_event_list_capacity;
+		/** The list size. */
 		std::size_t m_event_list_size;
 #else
 		/** The list of poll entries. */
@@ -93,7 +81,7 @@ namespace netlib
 		/** The list capacity. */
 		std::size_t m_poll_list_capacity;
 		/** The watched sockets. */
-		std::unordered_map<std::uintptr_t, std::list<detail::WatchEntry>::iterator> m_sockets;
+		std::unordered_map<detail::socket_t, std::list<detail::WatchEntry>::iterator> m_sockets;
 #endif
 	public:
 		/** Creates an empty poller. */
@@ -123,12 +111,13 @@ namespace netlib
 		@param[in] socket:
 			The socket to watch.
 		@param[in] read:
-			Whether to 
+			Whether to listen for input events.
+		@param[in] write:
+			Whether to listen for output events.
 		@return
 			The watch entry that was added, or null on failure. */
 		detail::WatchEntry const * watch(
 			Socket * socket,
-			PollListener * listener,
 			bool read,
 			bool write);
 
@@ -137,7 +126,6 @@ namespace netlib
 			class = typename std::enable_if<std::is_base_of<Socket, T>::value>::type>
 		NETLIB_INL bool watch(
 			T * object,
-			PollListener * listener,
 			bool read,
 			bool write);
 

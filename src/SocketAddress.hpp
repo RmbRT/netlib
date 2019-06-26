@@ -13,7 +13,7 @@ namespace netlib
 	typedef std::uint16_t port_t;
 
 	/** Represents an IPv4 address. */
-	struct IPv4Address
+	struct alignas(4) IPv4Address
 	{
 		/** The fields of the ip address. */
 		ubyte_t d0, d1, d2, d3;
@@ -47,7 +47,7 @@ namespace netlib
 	};
 
 	/** Represents an IPv6 address. */
-	struct IPv6Address
+	struct alignas(8) IPv6Address
 	{
 		/** The ip address data. */
 		std::uint16_t d0, d1, d2, d3, d4, d5, d6, d7;
@@ -92,10 +92,10 @@ namespace netlib
 	/** IPv4 socket address. */
 	struct IPv4SocketAddress
 	{
-		/** The port of the address. */
-		port_t port;
 		/** The address. */
 		IPv4Address address;
+		/** The port of the address. */
+		port_t port;
 
 		IPv4SocketAddress() = default;
 		/** */
@@ -117,10 +117,10 @@ namespace netlib
 	/** IPv6 socket address. */
 	struct IPv6SocketAddress
 	{
-		port_t port;
-		std::uint32_t field;
 		IPv6Address address;
+		std::uint32_t field;
 		std::uint32_t scope;
+		port_t port;
 
 		bool operator==(IPv6SocketAddress const& other) const;
 		bool operator!=(IPv6SocketAddress const& other) const;

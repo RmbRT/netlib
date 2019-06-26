@@ -3,17 +3,14 @@
 #ifndef __netlib_x_x_hpp_defined
 #define __netlib_x_x_hpp_defined
 
-#include "Connection.hpp"
+#include "BufferedConnection.hpp"
 #include "ConnectionListener.hpp"
 
 
-namespace netlib
+/** Extensions that sit on top of the socket library.
+	Contains more sophisticated networking classes. */
+namespace netlib::x
 {
-	/** Extensions that sit on top of the socket library.
-		Contains more sophisticated networking classes. */
-	namespace x
-	{
-	}
 }
 
 #endif

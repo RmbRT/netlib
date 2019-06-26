@@ -44,22 +44,38 @@ namespace netlib::x
 
 	bool BufferedConnection::flush_some()
 	{
-		return m_output.empty()
-			|| m_output.remove(
-				StreamSocket::send(
-					m_output.data(),
-					m_output.continuous_data()))
-			|| (async() && Socket::would_block());
+		if(m_output.empty())
+			return true;
+
+		std::size_t received;
+		if(Status::kSuccess == StreamSocket::send(
+			m_output.data(),
+			m_output.continuous_data(),
+			received))
+		{
+			m_output.remove(received);
+			return true;
+		}
+
+		return false;
 	}
 
 	bool BufferedConnection::receive_some()
 	{
-		return m_input.full()
-			|| m_input.add(
-				StreamSocket::recv(
-					m_input.end(),
-					m_input.continuous_free_space()))
-			|| (async() && Socket::would_block());
+		if(m_input.full())
+			return true;
+
+		std::size_t sent;
+		if(Status::kSuccess == StreamSocket::recv(
+			m_input.end(),
+			m_input.continuous_free_space(),
+			sent))
+		{
+			m_input.add(sent);
+			return true;
+		}
+
+		return false;
 	}
 
 	void BufferedConnection::discard()
@@ -67,6 +83,50 @@ namespace netlib::x
 		m_input.clear();
 		m_output.clear();
 	}
+
+	CR_IMPL(BufferedConnection::Flush)
+	CR_FINALLY
+		while(!conn->m_output.empty())
+		{
+			CR_AWAIT(conn->Socket::m_output.wait());
+			if(!conn->flush_some())
+				CR_THROW;
+		}
+	CR_IMPL_END
+
+	CR_IMPL(BufferedConnection::Send)
+		while(size)
+		{
+			if(!conn->m_output.full())
+			{
+				std::size_t sent = conn->m_output.append(data, size);
+				reinterpret_cast<std::uintptr_t &>(data) += sent;
+				size -= sent;
+			} else {
+				CR_AWAIT(conn->Socket::m_output.wait());
+				if(!conn->flush_some())
+					CR_THROW;
+			}
+		}
+	CR_FINALLY
+	CR_IMPL_END
+
+	CR_IMPL(BufferedConnection::Receive)
+		while(size)
+		{
+			if(!conn->m_input.empty())
+			{
+				std::size_t received = conn->m_input.consume(data, size);
+				reinterpret_cast<std::uintptr_t &>(data) += received;
+				size -= received;
+			} else {
+				CR_AWAIT(conn->Socket::m_input.wait());
+				if(!conn->receive_some())
+					CR_THROW;
+			}
+		}
+	CR_FINALLY
+	CR_IMPL_END
 
 	void BufferedConnection::close()
 	{
@@ -78,27 +138,23 @@ namespace netlib::x
 		Socket::close();
 	}
 
-	bool BufferedConnection::connect(
-		SocketAddress const& address)
-	{
-		assert(!exists());
+	CR_IMPL(BufferedConnection::Connect)
+		assert(!conn->exists());
 
-		new (this) StreamSocket(
+		new (conn) StreamSocket(
 			address.family);
 
-		return StreamSocket::connect(address);
-	}
+		switch(conn->StreamSocket::connect(address))
+		{
+		case Status::kSuccess:
+			CR_RETURN;
+		default:
+			CR_THROW;
+		case Status::kInProgress:;
+		}
 
-	bool BufferedConnection::connect(
-		async_t,
-		SocketAddress const& address)
-	{
-		assert(!exists());
-
-		new (this) StreamSocket(
-			kAsync,
-			address.family);
-
-		return StreamSocket::connect(address);
-	}
+		CR_AWAIT(conn->Socket::m_output.wait());
+		CR_RETURN;
+	CR_FINALLY
+	CR_IMPL_END
 }
